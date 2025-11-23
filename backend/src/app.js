@@ -10,8 +10,13 @@ const cors = require("cors");
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+    ],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorizartion"],
   })
 );
 app.use(cookieParser());
