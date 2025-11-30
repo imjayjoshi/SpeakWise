@@ -21,6 +21,8 @@ async function registerUser(req, res) {
     email,
     password: hashedPassword,
     role: role,
+    streak: 0,
+    lastLogin: new Date(),
   });
 
   const token = jwt.sign(
@@ -66,24 +68,35 @@ async function loginUser(req, res) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
+    // FIXED STREAK LOGIC
     const today = new Date();
-    const lastLogin = user.lastLogin;
+    today.setHours(0, 0, 0, 0); // Reset to midnight
 
+    // Get last login and reset to midnight for comparison
+    const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
     if (lastLogin) {
-      const diffInDays = Math.floor(
-        (today - new Date(lastLogin)) / (1000 * 60 * 60 * 24)
-      );
+      lastLogin.setHours(0, 0, 0, 0);
+    }
 
-      if (diffInDays === 1) {
-        user.streak += 1;
-      } else if (diffInDays > 1) {
-        user.streak = 0;
-      }
-    } else {
+    // Calculate difference in days
+    const diffInMs = today - lastLogin;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (!lastLogin) {
+      // First time login
+      user.streak = 1;
+    } else if (diffInDays === 0) {
+      // Same day login - no change
+    } else if (diffInDays === 1) {
+      // Consecutive day - increase streak
+      user.streak += 1;
+    } else if (diffInDays > 1) {
+      // Streak broken - reset to 1
       user.streak = 1;
     }
 
-    user.lastLogin = today;
+    // Update last login to current date
+    user.lastLogin = new Date();
     await user.save();
 
     const token = jwt.sign(
@@ -114,7 +127,6 @@ async function loginUser(req, res) {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
     res.status(500).json({ message: "Server error during login" });
   }
 }
@@ -140,10 +152,86 @@ async function getLoggedInUser(req, res) {
         streak: user.streak,
         badges: user.badges,
         role: user.role,
+        phone: user.phone,
+        languageLevel: user.languageLevel,
+        createdAt: user.created_at,
       },
     });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong", error });
+  }
+}
+
+async function updateProfile(req, res) {
+  try {
+    const userId = req.user._id;
+    const { fullName, phone, languageLevel } = req.body;
+
+    const updateData = {};
+    if (fullName) updateData.fullName = fullName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (languageLevel) updateData.languageLevel = languageLevel;
+
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        streak: user.streak,
+        badges: user.badges,
+        role: user.role,
+        languageLevel: user.languageLevel,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update profile", error: error.message });
+  }
+}
+
+async function updatePassword(req, res) {
+  try {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update password", error: error.message });
   }
 }
 
@@ -152,4 +240,6 @@ module.exports = {
   loginUser,
   logoutUser,
   getLoggedInUser,
+  updateProfile,
+  updatePassword,
 };

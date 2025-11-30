@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    phone: {
+      type: String,
+      default: "",
+    },
     badges: {
       type: [String],
       enum: [

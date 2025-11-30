@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { toast } from "sonner";
-import { authAPI, phraseAPI, Phrase } from "@/lib/api";
+import { authAPI, phraseAPI, Phrase, practiceHistoryAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +25,8 @@ import {
   GraduationCap,
   Trophy,
   Globe,
+  User,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Select,
@@ -55,6 +57,7 @@ const Dashboard = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<
     "English" | "Japanese" | "All"
   >("All");
+  const [practicedPhrases, setPracticedPhrases] = useState<Map<string, number>>(new Map());
   const navigate = useNavigate();
 
   // Fetch user and phrases data
@@ -83,6 +86,25 @@ const Dashboard = () => {
         ];
         setAllPhrases(allPhrasesData);
         setFilteredPhrases(allPhrasesData);
+
+        // Fetch practiced phrases
+        try {
+          const practiceRes = await practiceHistoryAPI.getPracticeHistory({ limit: 1000 });
+          const practices = practiceRes.data.practices || [];
+          
+          // Create a map of phraseId -> best score
+          const practiceMap = new Map<string, number>();
+          practices.forEach((practice: any) => {
+            const phraseId = typeof practice.phrase === 'object' ? practice.phrase._id : practice.phrase;
+            const currentBest = practiceMap.get(phraseId) || 0;
+            if (practice.score > currentBest) {
+              practiceMap.set(phraseId, practice.score);
+            }
+          });
+          setPracticedPhrases(practiceMap);
+        } catch (error) {
+          console.error("Error fetching practice history:", error);
+        }
 
         // Create level categories
         updateCategories(allPhrasesData);
@@ -212,6 +234,22 @@ const Dashboard = () => {
                   Progress
                 </Button>
               </Link>
+              <Link to="/profile">
+                <Button variant="ghost" size="sm" className="hidden sm:flex">
+                  Profile
+                </Button>
+              </Link>
+              
+              {/* User Profile Display */}
+              <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-secondary/50 rounded-lg">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <div className="text-sm">
+                  <p className="font-medium text-foreground leading-none">
+                    {user.fullName}
+                  </p>
+                </div>
+              </div>
+              
               <Button
                 variant="destructive"
                 size="sm"
@@ -274,13 +312,19 @@ const Dashboard = () => {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <p className="text-foreground font-medium text-sm sm:text-base">
                               "{phrase.text}"
                             </p>
                             <Badge variant="outline" className="text-xs">
                               {phrase.language === "English" ? "en" : "🇯🇵"}
                             </Badge>
+                            {practicedPhrases.has(phrase._id) && (
+                              <Badge variant="default" className="text-xs bg-success text-white flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Completed {practicedPhrases.get(phrase._id)}%
+                              </Badge>
+                            )}
                           </div>
                           {phrase.meaning && (
                             <p className="text-muted-foreground text-xs sm:text-sm mb-2">

@@ -50,7 +50,7 @@ const practiceHistorySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["completer", "in-progress", "skipped"],
+      enum: ["completed", "in-progress", "skipped"],
       default: "in-progress",
     },
   },

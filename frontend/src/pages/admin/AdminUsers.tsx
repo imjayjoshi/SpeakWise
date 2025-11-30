@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { adminUserAPI } from "@/lib/api";
+import { exportToExcel, formatDateForExport } from "@/lib/exportUtils";
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ import {
   Users,
   TrendingUp,
   Calendar,
+  RefreshCcw,
 } from "lucide-react";
 import {
   Table,
@@ -77,9 +79,9 @@ const AdminUsers = () => {
       setUsers(response.data.users || []);
       setTotalPages(response.data.pagination.pages);
       setTotalUsers(response.data.pagination.total);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching users:", error);
-      toast.error(error.response?.data?.message || "Failed to load users");
+      toast.error(error?.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -103,9 +105,9 @@ const AdminUsers = () => {
       await adminUserAPI.deleteUser(userId);
       toast.success("User deleted successfully!");
       fetchUsers(); // Refresh list
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error(error.response?.data?.message || "Failed to delete user");
+      toast.error(error?.response?.data?.message || "Failed to delete user");
     }
   };
 
@@ -120,6 +122,27 @@ const AdminUsers = () => {
     if (score >= 80) return "text-primary";
     if (score >= 70) return "text-action";
     return "text-muted-foreground";
+  };
+
+  const handleExportUsers = () => {
+    try {
+      const exportData = users.map(user => ({
+        "Full Name": user.fullName,
+        "Email": user.email,
+        "Role": user.role,
+        "Streak (days)": user.streak,
+        "Total Practices": user.statistics.totalPractices,
+        "Average Score": `${user.statistics.avgScore}%`,
+        "Last Practice": user.statistics.lastPractice ? formatDateForExport(user.statistics.lastPractice) : "Never",
+        "Joined Date": formatDateForExport(user.createdAt),
+      }));
+
+      exportToExcel(exportData, `Users_List_${new Date().toISOString().split('T')[0]}`, 'Users');
+      toast.success(`Exported ${users.length} users successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export users");
+    }
   };
 
   if (loading && users.length === 0) {
@@ -141,10 +164,16 @@ const AdminUsers = () => {
             Manage and monitor all learners
           </p>
         </div>
-        <Button variant="default" onClick={fetchUsers}>
-          <Download className="w-4 h-4" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportUsers}>
+            <Download className="w-4 h-4" />
+            Export Excel
+          </Button>
+          <Button variant="default" size="sm" onClick={fetchUsers}>
+            <RefreshCcw className="w-4 h-4" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Statistics Cards */}

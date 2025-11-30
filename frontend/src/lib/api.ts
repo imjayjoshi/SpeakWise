@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Create axios instance
 export const api = axios.create({
@@ -25,6 +25,12 @@ export const authAPI = {
   logout: () => api.get("/auth/user/logout"),
 
   getMe: () => api.get("/auth/me"),
+
+  updateProfile: (data: { fullName?: string; phone?: string; languageLevel?: string }) =>
+    api.put("/auth/profile", data),
+
+  updatePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.put("/auth/password", data),
 };
 
 // Phrase APIs
@@ -38,9 +44,10 @@ export const phraseAPI = {
   markAsPracticed: (id: string, score?: number) =>
     api.post(`/phrase/practice/${id}`, { score }),
 
-  getPracticedPhrases: () => api.get("/phrase/user/practiced"),
-
   getUserProgress: () => api.get("/phrase/user/progress"),
+
+  // Get list of practiced phrases with scores from practice history
+  getPracticedPhrases: () => api.get("/practice-history/history"),
 
   // Admin endpoints
   addPhrase: (data: {
@@ -116,8 +123,15 @@ export const adminUserAPI = {
   updateUser: (userId: string, data: any) =>
     api.put(`/admin/users/${userId}`, data),
 
+  // Update user password (admin only)
+  updateUserPassword: (userId: string, newPassword: string) =>
+    api.put(`/admin/users/${userId}/password`, { newPassword }),
+
   // Delete user
   deleteUser: (userId: string) => api.delete(`/admin/users/${userId}`),
+
+  // Get dashboard statistics
+  getDashboardStats: () => api.get("/admin/dashboard"),
 };
 
 // Response interceptor for error handling

@@ -46,6 +46,7 @@ async function savePracticeResult(req, res) {
       status: "completed",
     });
 
+    await practiceHistory.save();
     await updateUserStreak(req.user._id);
 
     res.status(201).json({
@@ -125,7 +126,6 @@ async function getUserStatistics(req, res) {
 
     const averages = avgResult[0] || {
       avgScore: 0,
-      avgResult: 0,
       avgAccuracy: 0,
       avgFluency: 0,
       avgPronunciation: 0,
@@ -178,7 +178,7 @@ async function getUserStatistics(req, res) {
         averageScore: Math.round(averages.avgScore),
         averageAccuracy: Math.round(averages.avgAccuracy),
         averageFluency: Math.round(averages.avgFluency),
-        averageProununciation: Math.round(averages.avgProununciation),
+        averagePronunciation: Math.round(averages.avgPronunciation),
         bestScore: bestScore?.score || 0,
         recentPractices,
         practicesByLevel: practiceByLevel.map((item) => ({

@@ -14,6 +14,7 @@ import AdminUserDetails from "@/pages/admin/AdminUserDetails";
 import AdminPhrases from "@/pages/admin/AdminPhrases";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminSettings from "@/pages/admin/AdminSettings";
+import UserProfile from "@/pages/UserProfile";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -99,6 +100,16 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <Progress />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* User Profile Route */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <UserProfile />
           </ProtectedRoute>
         }
       />

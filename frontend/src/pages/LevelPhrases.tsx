@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { phraseAPI, Phrase } from "@/lib/api";
+import { phraseAPI, Phrase, practiceHistoryAPI } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Play, Mic, Volume2, BookOpen, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, Mic, Volume2, BookOpen, Loader2, CheckCircle2 } from "lucide-react";
 
 const LevelPhrases = () => {
   const { level } = useParams();
@@ -20,6 +20,7 @@ const LevelPhrases = () => {
   const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [practicedPhrases, setPracticedPhrases] = useState<Map<string, number>>(new Map());
 
   const selectedLanguage = searchParams.get("lang") || "All";
 
@@ -42,6 +43,24 @@ const LevelPhrases = () => {
         }
 
         setPhrases(fetchedPhrases);
+
+        // Fetch practiced phrases
+        try {
+          const practiceRes = await practiceHistoryAPI.getPracticeHistory({ limit: 1000 });
+          const practices = practiceRes.data.practices || [];
+          
+          const practiceMap = new Map<string, number>();
+          practices.forEach((practice: any) => {
+            const phraseId = typeof practice.phrase === 'object' ? practice.phrase._id : practice.phrase;
+            const currentBest = practiceMap.get(phraseId) || 0;
+            if (practice.score > currentBest) {
+              practiceMap.set(phraseId, practice.score);
+            }
+          });
+          setPracticedPhrases(practiceMap);
+        } catch (error) {
+          console.error("Error fetching practice history:", error);
+        }
       } catch (error) {
         console.error("Error fetching phrases:", error);
         toast.error("Failed to load phrases");
@@ -177,13 +196,19 @@ const LevelPhrases = () => {
               >
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant="secondary" className="text-xs">
                         #{index + 1}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {phrase.language === "English" ? "en" : "🇯🇵"}
                       </Badge>
+                      {practicedPhrases.has(phrase._id) && (
+                        <Badge variant="default" className="text-xs bg-success text-white flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {practicedPhrases.get(phrase._id)}%
+                        </Badge>
+                      )}
                     </div>
                     <Button
                       variant="ghost"

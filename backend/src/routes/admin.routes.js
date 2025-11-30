@@ -7,9 +7,11 @@ const router = express.Router();
 router.get("/users", authAdmin, adminController.getAllUsers);
 router.get("/users/:userId", authAdmin, adminController.getUserDetails);
 router.put("/users/:userId", authAdmin, adminController.updateUser);
+router.put("/users/:userId/password", authAdmin, adminController.updateUserPassword);
 router.delete("/users/:userId", authAdmin, adminController.deleteUser);
 
 // System Statistics
 router.get("/statistics", authAdmin, adminController.getSystemStatistics);
+router.get("/dashboard", authAdmin, adminController.getSystemStatistics);
 
 module.exports = router;

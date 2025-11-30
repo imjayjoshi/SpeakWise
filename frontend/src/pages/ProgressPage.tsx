@@ -33,6 +33,7 @@ import {
   LogOut,
   Loader2,
   BarChart3,
+  User,
 } from "lucide-react";
 
 const ProgressPage = () => {
@@ -225,6 +226,19 @@ const ProgressPage = () => {
                   Dashboard
                 </Button>
               </Link>
+              
+              {/* User Profile Display */}
+              {user && (
+                <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 bg-secondary/50 rounded-lg">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <div className="text-sm">
+                    <p className="font-medium text-foreground leading-none">
+                      {user.fullName}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <Button
                 variant="destructive"
                 size="sm"
@@ -484,7 +498,7 @@ const ProgressPage = () => {
                                   </Badge>
                                   <Badge variant="outline" className="text-xs">
                                     {phraseData.language === "English"
-                                      ? "🇬🇧"
+                                      ? "en"
                                       : "🇯🇵"}
                                   </Badge>
                                 </>

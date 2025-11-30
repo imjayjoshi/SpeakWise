@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Target,
   Zap,
+  Mic,
 } from "lucide-react";
 
 const Feedback = () => {
@@ -29,21 +30,40 @@ const Feedback = () => {
   const [showScore, setShowScore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [practiceResult, setPracticeResult] = useState<any>(null);
+  const [nextPhraseId, setNextPhraseId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPhrase = async () => {
       try {
         if (phraseId) {
           const response = await phraseAPI.getPhraseById(phraseId);
-          setPhrase(response.data.phrase);
+          const currentPhrase = response.data.phrase;
+          setPhrase(currentPhrase);
+
+          // Fetch phrases of the same level to find the next one
+          try {
+            const levelResponse = await phraseAPI.getPhrasesByLevel(currentPhrase.level);
+            const phrasesOfSameLevel = levelResponse.data.phrases || [];
+            
+            // Find current phrase index
+            const currentIndex = phrasesOfSameLevel.findIndex((p: Phrase) => p._id === phraseId);
+            
+            // Get next phrase (loop back to first if at end)
+            if (currentIndex !== -1 && phrasesOfSameLevel.length > 1) {
+              const nextIndex = (currentIndex + 1) % phrasesOfSameLevel.length;
+              const nextPhrase = phrasesOfSameLevel[nextIndex];
+              setNextPhraseId(nextPhrase._id);
+            }
+          } catch (error) {
+            console.error("Error fetching next phrase:", error);
+          }
         }
 
-        // Get practice result from sessionStorage
         const resultStr = sessionStorage.getItem("practiceResult");
         if (resultStr) {
           const result = JSON.parse(resultStr);
           setPracticeResult(result);
-          sessionStorage.removeItem("practiceResult"); // Clear after reading
+          sessionStorage.removeItem("practiceResult");
         }
       } catch (error) {
         console.error("Error fetching phrase:", error);
@@ -57,7 +77,6 @@ const Feedback = () => {
 
   useEffect(() => {
     if (practiceResult) {
-      // Animate score on component mount
       setTimeout(() => {
         setShowScore(true);
         let currentScore = 0;
@@ -129,7 +148,6 @@ const Feedback = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -140,18 +158,15 @@ const Feedback = () => {
               </Link>
             </Button>
 
-            <Badge variant="secondary">Pronunciation Analysis</Badge>
+            <Badge variant="secondary">Real-Time Voice Analysis</Badge>
           </div>
         </div>
       </header>
 
-      {/* Feedback Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="space-y-6 sm:space-y-8">
-          {/* Score Display */}
           <div className="text-center space-y-4 sm:space-y-6">
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 mx-auto">
-              {/* Animated Radial Progress */}
               <svg
                 className="w-full h-full transform -rotate-90"
                 viewBox="0 0 100 100"
@@ -178,7 +193,6 @@ const Feedback = () => {
                 />
               </svg>
 
-              {/* Score Number */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <div
@@ -205,7 +219,60 @@ const Feedback = () => {
             </div>
           </div>
 
-          {/* Component Scores */}
+          {/* Voice Comparison - NEW */}
+          {practiceResult.spokenText && (
+            <Card className="shadow-card border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mic className="w-5 h-5 text-primary" />
+                  Voice Comparison
+                </CardTitle>
+                <CardDescription>
+                  Compare what you said vs the original phrase
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-secondary/20 border-2 border-success/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className="w-4 h-4 text-success" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Original Phrase
+                      </span>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      "{phraseText}"
+                    </p>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-primary/5 border-2 border-primary/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mic className="w-4 h-4 text-primary" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        You Said
+                      </span>
+                    </div>
+                    <p className="text-lg font-semibold text-foreground">
+                      "{practiceResult.spokenText}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-muted/50">
+                  <span className="text-sm font-medium">Match Accuracy:</span>
+                  <Badge
+                    variant="outline"
+                    className={`${getScoreColor(
+                      practiceResult.accuracy
+                    )} border-current`}
+                  >
+                    {practiceResult.accuracy}%
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -213,7 +280,7 @@ const Feedback = () => {
                 Performance Breakdown
               </CardTitle>
               <CardDescription>
-                Detailed analysis of your pronunciation
+                Real-time analysis of your pronunciation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -255,7 +322,7 @@ const Feedback = () => {
             </CardContent>
           </Card>
 
-          {/* Word-by-Word Analysis */}
+          {/* Word-by-Word Analysis - FIXED FULL WIDTH */}
           {practiceResult.wordAnalysis &&
             practiceResult.wordAnalysis.length > 0 && (
               <Card className="shadow-card">
@@ -265,44 +332,50 @@ const Feedback = () => {
                     Word-by-Word Analysis
                   </CardTitle>
                   <CardDescription>
-                    See how you performed on each word
+                    Real-time comparison of each word you spoke
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {practiceResult.wordAnalysis.map((word, index: number) => (
-                    <div
-                      key={index}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg bg-secondary/20 gap-3 sm:gap-4"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                          <span className="font-semibold text-base sm:text-lg truncate">
-                            "{word.word}"
-                          </span>
+                <CardContent className="space-y-3">
+                  {practiceResult.wordAnalysis.map(
+                    (word: any, index: number) => (
+                      <div
+                        key={index}
+                        className="p-4 rounded-lg bg-secondary/20 border border-border"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              <span className="font-semibold text-base sm:text-lg">
+                                Expected: "{word.word}"
+                              </span>
+                              {word.spokenWord &&
+                                word.spokenWord !== "not detected" && (
+                                  <span className="text-sm text-muted-foreground">
+                                    → You: "{word.spokenWord}"
+                                  </span>
+                                )}
+                            </div>
+                            <p className="text-muted-foreground text-sm mb-2">
+                              {word.feedback}
+                            </p>
+                          </div>
                           <Badge
                             variant="outline"
                             className={`${getScoreColor(
                               word.score
-                            )} border-current text-xs flex-shrink-0`}
+                            )} border-current text-sm flex-shrink-0`}
                           >
                             {word.score}%
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground text-xs sm:text-sm mb-2">
-                          {word.feedback}
-                        </p>
-                        <Progress
-                          value={word.score}
-                          className="h-2 max-w-full sm:max-w-xs"
-                        />
+                        <Progress value={word.score} className="h-2" />
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </CardContent>
               </Card>
             )}
 
-          {/* Achievement Badge */}
           {score >= 90 && (
             <Card className="shadow-card bg-gradient-to-r from-success/5 to-success/10 border-success/20">
               <CardContent className="p-6 text-center">
@@ -317,7 +390,6 @@ const Feedback = () => {
             </Card>
           )}
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Button variant="outline" size="lg" asChild>
               <Link to={`/practice/${phraseId}`}>
@@ -326,18 +398,26 @@ const Feedback = () => {
               </Link>
             </Button>
 
-            <Button variant="action" size="lg" asChild>
-              <Link to="/dashboard">
+            {loading ? (
+              <Button variant="action" size="lg" disabled>
                 <ArrowRight className="w-5 h-5" />
-                Next Phrase
-              </Link>
-            </Button>
+                Loading...
+              </Button>
+            ) : (
+              <Button variant="action" size="lg" asChild>
+                <Link to={nextPhraseId ? `/practice/${nextPhraseId}` : "/dashboard"}>
+                  <ArrowRight className="w-5 h-5" />
+                  {nextPhraseId ? "Next Phrase" : "Back to Dashboard"}
+                </Link>
+              </Button>
+            )}
           </div>
 
-          {/* Tips for Improvement */}
           <Card className="shadow-card">
             <CardHeader>
-              <CardTitle className="text-lg">Tips for Improvement</CardTitle>
+              <CardTitle className="text-lg">
+                Personalized Tips for Improvement
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-muted-foreground">
@@ -359,6 +439,12 @@ const Feedback = () => {
                 )}
                 {practiceResult.pronunciation < 85 && (
                   <li>• Pay attention to stress patterns and intonation</li>
+                )}
+                {practiceResult.spokenText && (
+                  <li>
+                    • Review the word comparison above to see exactly where to
+                    improve
+                  </li>
                 )}
                 <li>• Record yourself daily to track improvement over time</li>
                 <li>• Mimic native speakers' rhythm and intonation patterns</li>

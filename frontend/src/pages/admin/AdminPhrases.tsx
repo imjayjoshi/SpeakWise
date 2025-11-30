@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { phraseAPI, Phrase } from "@/lib/api";
+import axios from "axios";
+import { exportToExcel } from "@/lib/exportUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Download } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -89,7 +91,10 @@ const AdminPhrases = () => {
       closeDialog();
     } catch (error) {
       console.error("Error adding phrase:", error);
-      toast.error(error.response?.data?.message || "Failed to add phrase");
+      const message = axios.isAxiosError(error) 
+        ? error.response?.data?.message || "Failed to add phrase"
+        : "Failed to add phrase";
+      toast.error(message);
     }
   };
 
@@ -113,7 +118,10 @@ const AdminPhrases = () => {
       closeDialog();
     } catch (error) {
       console.error("Error updating phrase:", error);
-      toast.error(error.response?.data?.message || "Failed to update phrase");
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Failed to update phrase"
+        : "Failed to update phrase";
+      toast.error(message);
     }
   };
 
@@ -128,7 +136,10 @@ const AdminPhrases = () => {
       toast.success("Phrase deleted successfully!");
     } catch (error) {
       console.error("Error deleting phrase:", error);
-      toast.error(error.response?.data?.message || "Failed to delete phrase");
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.message || "Failed to delete phrase"
+        : "Failed to delete phrase";
+      toast.error(message);
     }
   };
 
@@ -180,7 +191,26 @@ const AdminPhrases = () => {
   };
 
   const getLanguageFlag = (language: string) => {
-    return language === "English" ? "en" : "🇯🇵";
+    return language === "English" ? "🇬🇧" : "🇯🇵";
+  };
+
+  const handleExportPhrases = () => {
+    try {
+      const exportData = phrases.map(phrase => ({
+        "Phrase": phrase.text,
+        "Meaning": phrase.meaning || "-",
+        "Example": phrase.example || "-",
+        "Language": phrase.language,
+        "Level": phrase.level,
+        "Has Audio": phrase.audioUrl ? "Yes" : "No",
+      }));
+
+      exportToExcel(exportData, `Phrases_Library_${new Date().toISOString().split('T')[0]}`, 'Phrases');
+      toast.success(`Exported ${phrases.length} phrases successfully!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export phrases");
+    }
   };
 
   if (loading) {
@@ -214,13 +244,18 @@ const AdminPhrases = () => {
             </Badge>
           </div>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="action" onClick={() => setEditingPhrase(null)}>
-              <Plus className="w-4 h-4" />
-              Add New Phrase
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportPhrases}>
+            <Download className="w-4 h-4" />
+            Export Excel
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="action" onClick={() => setEditingPhrase(null)}>
+                <Plus className="w-4 h-4" />
+                Add New Phrase
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -347,6 +382,7 @@ const AdminPhrases = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card className="shadow-card">
@@ -376,11 +412,11 @@ const AdminPhrases = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[30%]">Phrase</TableHead>
-                    <TableHead className="w-[25%]">Meaning</TableHead>
-                    <TableHead>Lang</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[30%] font-bold text-color-[#000]">Phrase</TableHead>
+                    <TableHead className="w-[25%] font-bold text-color-[#000]">Meaning</TableHead>
+                    <TableHead className="font-bold text-color-[#000]">Lang</TableHead>
+                    <TableHead className="font-bold text-color-[#000]">Level</TableHead>
+                    <TableHead className="text-right font-bold text-color-[#000]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -397,13 +433,13 @@ const AdminPhrases = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        <div className="max-w-xs truncate">
+                        <div className="max-w-[200px] truncate" title={phrase.meaning || "-"}>
                           {phrase.meaning || "-"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
-                          {getLanguageFlag(phrase.language)} {phrase.language}
+                          {getLanguageFlag(phrase.language)}
                         </Badge>
                       </TableCell>
                       <TableCell>

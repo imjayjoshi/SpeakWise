@@ -228,6 +228,43 @@ async function updateUser(req, res) {
   }
 }
 
+// Update user password (admin only)
+async function updateUserPassword(req, res) {
+  try {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "User password updated successfully",
+    });
+  } catch (error) {
+    console.error("Update user password error:", error);
+    res.status(500).json({
+      message: "Failed to update password",
+      error: error.message,
+    });
+  }
+}
+
 // Delete User
 async function deleteUser(req, res) {
   try {
@@ -336,6 +373,7 @@ module.exports = {
   getAllUsers,
   getUserDetails,
   updateUser,
+  updateUserPassword,
   deleteUser,
   getSystemStatistics,
 };
