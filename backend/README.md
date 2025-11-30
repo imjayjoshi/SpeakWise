@@ -103,56 +103,17 @@ backend/
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 API Overview
 
-### Authentication (`/api/auth`)
+The backend provides RESTful APIs for:
 
-```
-POST   /auth/user/register      # Register new user
-POST   /auth/user/login         # User login
-POST   /auth/admin/login        # Admin login
-POST   /auth/logout             # Logout
-GET    /auth/me                 # Get current user
-PUT    /auth/update-profile     # Update profile
-PUT    /auth/update-password    # Change password
-```
+- **Authentication** - User/admin login, registration, profile management
+- **Phrases** - Phrase management and retrieval by difficulty level
+- **Practice History** - Save and retrieve user practice sessions
+- **Admin** - User management, statistics, and reports
+- **Health** - Application and database health checks
 
-### Phrases (`/api/phrase`)
-
-```
-GET    /phrase/level/:level     # Get phrases by level
-GET    /phrase/:id              # Get single phrase
-POST   /phrase                  # Add phrase (admin)
-PUT    /phrase/:id              # Update phrase (admin)
-DELETE /phrase/:id              # Delete phrase (admin)
-```
-
-### Practice History (`/api/practice-history`)
-
-```
-GET    /practice-history        # Get user's practice history
-POST   /practice-history        # Save practice result
-GET    /practice-history/stats  # Get user statistics
-```
-
-### Admin (`/api/admin`)
-
-```
-GET    /admin/users             # Get all users
-GET    /admin/users/:id         # Get user details
-PUT    /admin/users/:id         # Update user
-PUT    /admin/users/:id/password # Reset user password
-DELETE /admin/users/:id         # Delete user
-GET    /admin/dashboard-stats   # Get dashboard statistics
-GET    /admin/phrases           # Get all phrases
-```
-
-### Health Check
-
-```
-GET    /health                  # Application health
-GET    /ready                   # Database readiness
-```
+For detailed API documentation, refer to the route files in `src/routes/`.
 
 ---
 
@@ -178,86 +139,14 @@ GET    /ready                   # Database readiness
 
 ---
 
-## 📊 Database Schema
+## 🗄️ Database
 
-### User Model
-```javascript
-{
-  fullName: String,
-  email: String (unique),
-  password: String (hashed),
-  role: String (user/admin),
-  streak: Number,
-  createdAt: Date
-}
-```
+**MongoDB Collections**:
+- Users
+- Phrases
+- Practice History
 
-### Phrase Model
-```javascript
-{
-  text: String,
-  meaning: String,
-  example: String,
-  language: String,
-  level: String (beginner/intermediate/expert),
-  audioUrl: String,
-  audioMeaningUrl: String,
-  createdAt: Date
-}
-```
-
-### Practice History Model
-```javascript
-{
-  userId: ObjectId,
-  phraseId: ObjectId,
-  score: Number,
-  accuracy: Number,
-  fluency: Number,
-  pronunciation: Number,
-  wordAnalysis: Array,
-  duration: Number,
-  createdAt: Date
-}
-```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Required:
-- `MONGODB_URI` - MongoDB connection string
-- `JWT_SECRET` - Secret key for JWT (min 32 chars)
-
-Optional:
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment (development/production)
-- `CORS_ORIGIN` - Allowed frontend origin
-
-### Rate Limiting
-
-Current settings:
-- Window: 15 minutes
-- Max requests: 100 per IP
-- Applies to: `/api/*` routes
-
-### CORS
-
-Allowed origins:
-- Development: `http://localhost:5173`, `http://localhost:5174`
-- Production: Set via `CORS_ORIGIN` env variable
-
----
-
-## 📜 Available Scripts
-
-```bash
-npm start          # Start production server
-npm run dev        # Start development server (nodemon)
-npm test           # Run tests (not implemented)
-```
+For schema details, see the model files in `src/models/`.
 
 ---
 
@@ -283,60 +172,25 @@ node seedPhrases.js
 - ✅ Rate limiting
 
 **Monitoring**:
-- Health check endpoint
-- Database readiness check
+- Health check endpoint (`/health`)
+- Database readiness check (`/ready`)
 - Uptime tracking
 
 ---
 
-## 🔐 Authentication Flow
+## 🔐 Authentication
 
-1. **Register**: User submits credentials → Password hashed → User created
-2. **Login**: Credentials verified → JWT generated → Token sent in cookie
-3. **Protected Routes**: Token verified → User data attached to request
-4. **Logout**: Cookie cleared
+**Flow**:
+1. User registers/logs in
+2. JWT token generated
+3. Token stored in HTTP-only cookie
+4. Protected routes verify token
+5. User data attached to request
 
 **Token Details**:
 - Expires: 7 days
 - HTTP-only cookie
 - Secure in production
-- Includes user ID and role
-
----
-
-## 🧪 Development Tips
-
-### Testing API Endpoints
-
-Use tools like:
-- Postman
-- Insomnia
-- Thunder Client (VS Code)
-- cURL
-
-### Database Connection
-
-MongoDB connection is established on server start. Check logs for:
-```
-DB connected
-```
-
-### Error Handling
-
-All errors return JSON:
-```json
-{
-  "message": "Error description",
-  "error": "Details (dev only)"
-}
-```
-
-### Logging
-
-Console logs for:
-- Database connection
-- Server start
-- Errors (production-safe)
 
 ---
 
@@ -354,23 +208,9 @@ See `package.json` for complete list. Key dependencies:
 
 ---
 
-## 🤝 Contributing
+## 📝 License
 
-1. Follow Node.js best practices
-2. Use async/await for async operations
-3. Validate all inputs
-4. Handle errors properly
-5. Add comments for complex logic
-
----
-
-## 📝 Notes
-
-- All endpoints return JSON
-- Authentication uses HTTP-only cookies
-- Admin routes require admin role
-- Database indexes on email, userId, phraseId
-- Production-ready with security middleware
+MIT License - This is a personal project by Jay Joshi.
 
 ---
 

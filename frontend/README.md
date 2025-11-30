@@ -246,23 +246,9 @@ See `package.json` for complete list. Key dependencies:
 
 ---
 
-## 🤝 Contributing
+## 📝 License
 
-1. Follow TypeScript best practices
-2. Use existing components when possible
-3. Maintain consistent styling
-4. Test on multiple browsers
-5. Ensure responsive design
-
----
-
-## 📝 Notes
-
-- All pages are dynamic (no hardcoded data)
-- Zero console.log statements in production
-- TypeScript strict mode enabled
-- Build tested and working
-- Production-ready
+MIT License - This is a personal project by Jay Joshi.
 
 ---
 

@@ -94,13 +94,13 @@ SpeakWise/
 
 ## 🔐 Security Features
 
-✅ Helmet.js security headers
-✅ Rate limiting (100 req/15min)
-✅ CORS protection
-✅ JWT authentication
-✅ Password hashing with bcrypt
-✅ Environment variable protection
-✅ Input validation
+- ✅ Helmet.js security headers
+- ✅ Rate limiting (100 req/15min)
+- ✅ CORS protection
+- ✅ JWT authentication
+- ✅ Password hashing with bcrypt
+- ✅ Environment variable protection
+- ✅ Input validation
 
 ## 📊 Production Ready
 
@@ -122,28 +122,9 @@ See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed deployment instructions.
 - Frontend: Vercel
 - Database: MongoDB Atlas
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is part of an academic project (MCA SEM-3 SD).
-
 ## 👨‍💻 Author
 
 **Jay Joshi** - [@imjayjoshi](https://github.com/imjayjoshi)
-
-## 🆘 Support
-
-If you encounter any issues:
-1. Check the [DEPLOYMENT.md](./DEPLOYMENT.md) guide
-2. Review frontend/backend README files
-3. Open an issue with error details and OS information
 
 ---
 
