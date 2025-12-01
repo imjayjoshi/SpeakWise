@@ -5,10 +5,6 @@ import axios from "axios";
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || "/api";
 
-// Debug: Log the API base URL (remove in production)
-console.log("🔧 API Base URL:", API_BASE_URL);
-console.log("🔧 VITE_API_URL env:", import.meta.env.VITE_API_URL);
-
 // Create axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,
