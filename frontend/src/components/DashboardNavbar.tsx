@@ -11,7 +11,7 @@ const DashboardNavbar = () => {
   const handleLogout = async () => {
     try {
       // Call backend logout endpoint
-      await axios.get("http://localhost:3000/api/auth/user/logout", {
+      await axios.get("http://localhost:5000/api/auth/user/logout", {
         withCredentials: true,
       });
 

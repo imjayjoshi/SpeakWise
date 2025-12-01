@@ -37,8 +37,8 @@ const Auth = () => {
     try {
       const endpoint =
         activeTab === "signin"
-          ? "http://localhost:3000/api/auth/user/login"
-          : "http://localhost:3000/api/auth/user/register";
+          ? "http://localhost:5000/api/auth/user/login"
+          : "http://localhost:5000/api/auth/user/register";
 
       const response = await axios.post(endpoint, formData, {
         withCredentials: true,
