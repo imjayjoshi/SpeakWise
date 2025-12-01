@@ -37,8 +37,8 @@ const Auth = () => {
     try {
       const endpoint =
         activeTab === "signin"
-          ? "http://localhost:5000/api/auth/user/login"
-          : "http://localhost:5000/api/auth/user/register";
+          ? "/api/auth/user/login"
+          : "/api/auth/user/register";
 
       const response = await axios.post(endpoint, formData, {
         withCredentials: true,
@@ -64,8 +64,13 @@ const Auth = () => {
         }
       }, 1000);
     } catch (error) {
-      console.error("Auth Error:", error.response?.data || error.message);
-      toast.error(error.response?.data?.message || "Authentication failed");
+      if (axios.isAxiosError(error)) {
+        console.error("Auth Error:", error.response?.data || error.message);
+        toast.error(error.response?.data?.message || "Authentication failed");
+      } else {
+        console.error("Auth Error:", error);
+        toast.error("An unexpected error occurred");
+      }
     } finally {
       setIsLoading(false);
     }
