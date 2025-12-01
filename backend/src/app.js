@@ -11,6 +11,9 @@ const adminRoutes = require("./routes/admin.routes");
 const healthRoutes = require("./routes/health.routes");
 const cors = require("cors");
 
+// Trust proxy - Required for Railway deployment
+app.set("trust proxy", 1);
+
 // Security middleware
 app.use(helmet());
 app.use(compression());

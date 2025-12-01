@@ -14,7 +14,7 @@ async function registerUser(req, res) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const role = email === "admin@gmail.com" ? "admin" : "user";
+  const role = email === "admin@gmail.com" ? "admin" : "learner";
 
   const user = await userModel.create({
     fullName,
