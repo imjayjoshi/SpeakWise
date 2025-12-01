@@ -10,15 +10,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mic, ArrowLeft } from "lucide-react";
+import { Mic, ArrowLeft, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "sonner";
 import { authAPI } from "@/lib/api";
+import { validatePassword, validateEmail } from "@/lib/passwordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -29,10 +33,51 @@ const Auth = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear validation errors when user starts typing
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setValidationErrors([]);
+    
+    // Client-side validation
+    const errors: string[] = [];
+    
+    if (activeTab === "signup") {
+      // Validate full name
+      if (!formData.fullName.trim()) {
+        errors.push("Full name is required");
+      } else if (formData.fullName.trim().length < 2) {
+        errors.push("Full name must be at least 2 characters");
+      }
+    }
+    
+    // Validate email
+    if (!formData.email.trim()) {
+      errors.push("Email is required");
+    } else if (!validateEmail(formData.email)) {
+      errors.push("Please provide a valid email address");
+    }
+    
+    // Validate password
+    if (!formData.password) {
+      errors.push("Password is required");
+    } else if (activeTab === "signup") {
+      const passwordValidation = validatePassword(formData.password);
+      if (!passwordValidation.isValid) {
+        errors.push(...passwordValidation.errors);
+      }
+    }
+    
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      toast.error("Please fix the validation errors");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -63,7 +108,14 @@ const Auth = () => {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Auth Error:", error.response?.data || error.message);
-        toast.error(error.response?.data?.message || "Authentication failed");
+        const errorMessage = error.response?.data?.message || "Authentication failed";
+        const serverErrors = error.response?.data?.errors;
+        
+        if (serverErrors && Array.isArray(serverErrors)) {
+          setValidationErrors(serverErrors);
+        } else {
+          toast.error(errorMessage);
+        }
       } else {
         console.error("Auth Error:", error);
         toast.error("An unexpected error occurred");
@@ -169,6 +221,20 @@ const Auth = () => {
                   <CardTitle className="text-xl">Create your account</CardTitle>
                 </div>
 
+                {/* Validation Errors Alert */}
+                {validationErrors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <ul className="list-disc list-inside space-y-1">
+                        {validationErrors.map((error, index) => (
+                          <li key={index} className="text-sm">{error}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
@@ -207,6 +273,8 @@ const Auth = () => {
                       onChange={handleChange}
                       required
                     />
+                    {/* Password Strength Indicator */}
+                    <PasswordStrengthIndicator password={formData.password} />
                   </div>
 
                   <Button

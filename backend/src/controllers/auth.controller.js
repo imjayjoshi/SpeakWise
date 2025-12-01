@@ -5,56 +5,76 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 async function registerUser(req, res) {
-  const { fullName, email, password } = req.body;
+  try {
+    const { fullName, email, password } = req.body;
 
-  const isUserAlreadyExists = await userModel.findOne({ email });
-  if (isUserAlreadyExists) {
-    return res.status(400).json({ message: "User already exists" });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const role = email === "admin@gmail.com" ? "admin" : "learner";
-
-  const user = await userModel.create({
-    fullName,
-    email,
-    password: hashedPassword,
-    role: role,
-    streak: 0,
-    lastLogin: new Date(),
-  });
-
-  const token = jwt.sign(
-    {
-      id: user._id,
-      role: user.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "24h",
+    // Check if user already exists
+    const isUserAlreadyExists = await userModel.findOne({ email });
+    if (isUserAlreadyExists) {
+      return res.status(400).json({ 
+        success: false,
+        message: "User already exists with this email address" 
+      });
     }
-  );
 
-  res.cookie("token", token, {
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production",
-  });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  res.status(200).json({
-    message: "User Created Successfully",
-    user: {
-      id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      streak: user.streak,
-      badges: user.badges,
-    },
-  });
+    // Determine role
+    const role = email === "admin@gmail.com" ? "admin" : "learner";
+
+    // Create user
+    const user = await userModel.create({
+      fullName,
+      email,
+      password: hashedPassword,
+      role: role,
+      streak: 0,
+      lastLogin: new Date(),
+    });
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    // Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User Created Successfully",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        streak: user.streak,
+        badges: user.badges,
+      },
+    });
+  } catch (error) {
+    console.error("Registration Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error during registration",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
+  }
 }
+
 
 async function loginUser(req, res) {
   const { email, password } = req.body;
@@ -62,12 +82,18 @@ async function loginUser(req, res) {
   try {
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid email or password" 
+      });
     }
 
     // FIXED STREAK LOGIC
@@ -120,6 +146,7 @@ async function loginUser(req, res) {
     });
 
     res.status(200).json({
+      success: true,
       message: "Login Successful",
       user: {
         id: user._id,
@@ -131,7 +158,12 @@ async function loginUser(req, res) {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error during login" });
+    console.error("Login Error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Server error during login",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 }
 

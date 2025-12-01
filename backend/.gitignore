@@ -5,3 +5,4 @@ node_modules/
 dist/
 build/
 seedPhrases.js
+# __tests__
