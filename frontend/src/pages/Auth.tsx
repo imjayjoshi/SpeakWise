@@ -14,6 +14,7 @@ import { Mic, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "sonner";
+import { authAPI } from "@/lib/api";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,14 +36,10 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const endpoint =
+      const response =
         activeTab === "signin"
-          ? "/api/auth/user/login"
-          : "/api/auth/user/register";
-
-      const response = await axios.post(endpoint, formData, {
-        withCredentials: true,
-      });
+          ? await authAPI.login({ email: formData.email, password: formData.password })
+          : await authAPI.register(formData);
 
       const user = response.data.user;
 
