@@ -34,6 +34,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5000",
+      "https://speakwiseai.vercel.app",
     ],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
