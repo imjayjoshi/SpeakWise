@@ -234,22 +234,29 @@ async function updateUserPassword(req, res) {
     const { userId } = req.params;
     const { newPassword } = req.body;
 
-    if (!newPassword || newPassword.length < 6) {
+    // Validate password using the same validation as registration
+    const { validatePassword } = require('../utils/passwordValidator');
+    const validation = validatePassword(newPassword);
+
+    if (!validation.isValid) {
       return res.status(400).json({
-        message: "Password must be at least 6 characters long",
+        success: false,
+        message: 'Password does not meet requirements',
+        errors: validation.errors
       });
     }
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
+        success: false,
         message: "User not found",
       });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+    // Hash new password with bcrypt
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
     await user.save();
 
     res.status(200).json({
@@ -259,8 +266,9 @@ async function updateUserPassword(req, res) {
   } catch (error) {
     console.error("Update user password error:", error);
     res.status(500).json({
+      success: false,
       message: "Failed to update password",
-      error: error.message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 }

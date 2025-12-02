@@ -27,6 +27,7 @@ import {
   Key,
   Save,
 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const AdminUserDetails = () => {
   const { id } = useParams();
@@ -369,10 +370,9 @@ const AdminUserDetails = () => {
             <div className="grid gap-3 md:grid-cols-2">
               <div>
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input
+                <PasswordInput
                   id="newPassword"
-                  type="password"
-                  placeholder="Minimum 6 characters"
+                  placeholder="Minimum 8 characters, uppercase, lowercase, number, special char"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={updating}
@@ -380,9 +380,8 @@ const AdminUserDetails = () => {
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

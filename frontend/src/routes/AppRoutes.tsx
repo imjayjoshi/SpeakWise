@@ -15,6 +15,8 @@ import AdminPhrases from "@/pages/admin/AdminPhrases";
 import AdminReports from "@/pages/admin/AdminReports";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import UserProfile from "@/pages/UserProfile";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -35,8 +37,11 @@ const AppRouter = () => {
       />
 
       {/* Auth Routes */}
+      <Route path="/auth" element={<Auth />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/signup" element={<Auth />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* User Dashboard Routes - Protected */}
       <Route

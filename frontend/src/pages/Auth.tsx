@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { authAPI } from "@/lib/api";
 import { validatePassword, validateEmail } from "@/lib/passwordValidation";
 import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Auth = () => {
@@ -191,15 +192,22 @@ const Auth = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="password"
                       name="password"
-                      type="password"
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
-                      required
                     />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
                   </div>
 
                   <Button
@@ -264,14 +272,12 @@ const Auth = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="signup-password"
                       name="password"
-                      type="password"
                       placeholder="Create a strong password"
                       value={formData.password}
                       onChange={handleChange}
-                      required
                     />
                     {/* Password Strength Indicator */}
                     <PasswordStrengthIndicator password={formData.password} />

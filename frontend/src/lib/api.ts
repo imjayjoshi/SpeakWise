@@ -31,6 +31,13 @@ export const authAPI = {
 
   updatePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put("/auth/password", data),
+
+  // Forgot Password
+  requestPasswordReset: (email: string) =>
+    api.post("/auth/forgot-password", { email }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    api.post(`/auth/reset-password/${token}`, { newPassword }),
 };
 
 // Phrase APIs
