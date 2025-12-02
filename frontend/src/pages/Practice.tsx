@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mic, Square, ArrowLeft, Volume2, Loader2 } from "lucide-react";
+import {
+  initializeSpeechRecognition,
+  analyzeRecording,
+  type SpeechRecognitionResult,
+} from "@/lib/speechRecognition";
 
 const Practice = () => {
   const { phraseId } = useParams();
@@ -16,10 +21,16 @@ const Practice = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  
+  // Speech recognition states
+  const [recognizedText, setRecognizedText] = useState("");
+  const [interimText, setInterimText] = useState("");
+  const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     const fetchPhrase = async () => {
@@ -119,9 +130,10 @@ const Practice = () => {
     }
   };
 
-  // Start recording
+  // Start recording with speech recognition
   const startRecording = async () => {
     try {
+      // Start audio recording
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       const mediaRecorder = new MediaRecorder(stream);
@@ -145,8 +157,40 @@ const Practice = () => {
       };
 
       mediaRecorder.start();
+
+      // Initialize speech recognition
+      const language = currentPhrase?.language === "Japanese" ? "ja-JP" : "en-US";
+      
+      const recognition = initializeSpeechRecognition(
+        language,
+        (result: SpeechRecognitionResult) => {
+          if (result.isFinal) {
+            setRecognizedText((prev) => prev + " " + result.transcript);
+            setInterimText("");
+          } else {
+            setInterimText(result.transcript);
+          }
+        },
+        () => {
+          // Speech ended
+          console.log("Speech recognition ended");
+        },
+        (error: string) => {
+          console.error("Speech recognition error:", error);
+          toast.error(error);
+        }
+      );
+
+      if (recognition) {
+        speechRecognitionRef.current = recognition;
+        recognition.start();
+      }
+
+      setRecordingStartTime(Date.now());
       setIsRecording(true);
-      toast.success("Recording started!");
+      setRecognizedText("");
+      setInterimText("");
+      toast.success("Recording started! Speak clearly into the microphone.");
     } catch (error) {
       console.error("Error starting recording:", error);
       toast.error(
@@ -159,8 +203,16 @@ const Practice = () => {
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
+      
+      // Stop speech recognition
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+        speechRecognitionRef.current = null;
+      }
+
       setIsRecording(false);
       setHasRecorded(true);
+      setInterimText("");
       toast.success("Recording stopped!");
     }
   };
@@ -174,19 +226,39 @@ const Practice = () => {
     }
   };
 
-  // Submit for analysis with accurate scoring
+  // Submit for analysis with REAL speech recognition
   const handleSubmitRecording = async () => {
     if (!recordedAudio || !currentPhrase) {
       toast.error("Please record your pronunciation first");
       return;
     }
 
+    if (!recognizedText || recognizedText.trim().length === 0) {
+      toast.error("No speech detected. Please speak clearly and try again.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // Generate accurate score based on phrase analysis
-      // This is a simulation - in production, you'd send audio to speech recognition API
-      const analysisResult = analyzeRecording(currentPhrase.text);
+      // Calculate recording duration
+      const duration = recordingStartTime 
+        ? (Date.now() - recordingStartTime) / 1000 
+        : 0;
+
+      // Analyze recording with REAL speech recognition data
+      const analysisResult = analyzeRecording(
+        recognizedText.trim(),
+        currentPhrase.text,
+        duration
+      );
+
+      // Check if analysis detected an error
+      if (analysisResult.error) {
+        toast.error(analysisResult.error);
+        setLoading(false);
+        return;
+      }
 
       // Save practice result with detailed scores
       await practiceHistoryAPI.savePracticeResult(currentPhrase._id, {
@@ -212,58 +284,6 @@ const Practice = () => {
       toast.error("Failed to submit recording");
       setLoading(false);
     }
-  };
-
-  // Analyze recording and generate accurate scores
-  const analyzeRecording = (text: string) => {
-    // Split text into words
-    const words = text.split(/\s+/).filter((word) => word.length > 0);
-
-    // Generate word-level analysis
-    const wordAnalysis = words.map((word) => {
-      // Simulate accuracy based on word complexity
-      const baseScore = 75 + Math.random() * 20; // 75-95
-      const complexity = word.length > 6 ? -5 : 0;
-      const score = Math.min(
-        100,
-        Math.max(60, Math.round(baseScore + complexity))
-      );
-
-      // Generate feedback based on score
-      let feedback = "";
-      if (score >= 90) feedback = "Perfect pronunciation!";
-      else if (score >= 80) feedback = "Great job! Minor improvements needed.";
-      else if (score >= 70) feedback = "Good effort. Focus on clarity.";
-      else feedback = "Needs practice. Listen carefully to native speaker.";
-
-      return {
-        word,
-        score,
-        feedback,
-      };
-    });
-
-    // Calculate component scores
-    const avgWordScore =
-      wordAnalysis.reduce((sum, w) => sum + w.score, 0) / wordAnalysis.length;
-
-    const accuracy = Math.round(avgWordScore + (Math.random() * 5 - 2.5)); // ±2.5%
-    const fluency = Math.round(85 + Math.random() * 10); // 85-95
-    const pronunciation = Math.round(avgWordScore + (Math.random() * 6 - 3)); // ±3%
-
-    // Overall score is weighted average
-    const overallScore = Math.round(
-      accuracy * 0.4 + fluency * 0.3 + pronunciation * 0.3
-    );
-
-    return {
-      overallScore: Math.min(100, Math.max(60, overallScore)),
-      accuracy: Math.min(100, Math.max(60, accuracy)),
-      fluency: Math.min(100, Math.max(60, fluency)),
-      pronunciation: Math.min(100, Math.max(60, pronunciation)),
-      wordAnalysis,
-      duration: 15 + Math.random() * 10, // 15-25 seconds
-    };
   };
 
   // Play recorded audio
@@ -292,6 +312,9 @@ const Practice = () => {
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
       }
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+      }
     };
   }, []);
 
@@ -313,6 +336,10 @@ const Practice = () => {
       </div>
     );
   }
+
+  const displayText = isRecording 
+    ? (recognizedText + " " + interimText).trim() || "Listening..."
+    : recognizedText.trim() || "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -409,6 +436,30 @@ const Practice = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Real-Time Transcription Display */}
+          {(isRecording || hasRecorded) && displayText && (
+            <Card className="max-w-2xl mx-auto shadow-soft border-primary/30">
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Mic className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {isRecording ? "You're saying:" : "You said:"}
+                    </span>
+                  </div>
+                  <p className={`text-lg sm:text-xl font-medium ${isRecording ? "text-primary" : "text-foreground"}`}>
+                    "{displayText}"
+                  </p>
+                  {isRecording && interimText && (
+                    <p className="text-sm text-muted-foreground italic">
+                      (recognizing...)
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Recording Interface */}
           <div className="space-y-6 sm:space-y-8">
