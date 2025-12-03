@@ -157,6 +157,10 @@ const Practice = () => {
       };
 
       mediaRecorder.start();
+      // Reset state BEFORE starting recognition
+      setRecognizedText("");
+      setInterimText("");
+      setRecordingStartTime(Date.now());
 
       // Initialize speech recognition
       const language = currentPhrase?.language === "Japanese" ? "ja-JP" : "en-US";
@@ -164,8 +168,18 @@ const Practice = () => {
       const recognition = initializeSpeechRecognition(
         language,
         (result: SpeechRecognitionResult) => {
+          console.log('Speech result received:', { 
+            transcript: result.transcript, 
+            isFinal: result.isFinal,
+            confidence: result.confidence 
+          });
+          
           if (result.isFinal) {
-            setRecognizedText((prev) => prev + " " + result.transcript);
+            setRecognizedText((prev) => {
+              const newText = prev + " " + result.transcript;
+              console.log('Final text updated:', newText.trim());
+              return newText;
+            });
             setInterimText("");
           } else {
             setInterimText(result.transcript);
@@ -183,14 +197,18 @@ const Practice = () => {
 
       if (recognition) {
         speechRecognitionRef.current = recognition;
+        
+        // Add onstart handler to confirm recognition started
+        recognition.onstart = () => {
+          console.log('Speech recognition started successfully');
+        };
+        
         recognition.start();
+        setIsRecording(true);
+        toast.success("Recording started! Speak clearly into the microphone.");
+      } else {
+        throw new Error("Failed to initialize speech recognition");
       }
-
-      setRecordingStartTime(Date.now());
-      setIsRecording(true);
-      setRecognizedText("");
-      setInterimText("");
-      toast.success("Recording started! Speak clearly into the microphone.");
     } catch (error) {
       console.error("Error starting recording:", error);
       toast.error(

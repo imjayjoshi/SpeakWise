@@ -60,8 +60,9 @@ export const initializeSpeechRecognition = (
   recognition.lang = language;
   recognition.maxAlternatives = 1;
 
-  // Track if we've received any speech
+  // Track if we've received any speech and if recognition should keep running
   let hasReceivedSpeech = false;
+  let shouldContinue = true;
 
   // Handle results
   recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -75,17 +76,40 @@ export const initializeSpeechRecognition = (
     // Mark that we've received speech
     hasReceivedSpeech = true;
 
+    console.log('[SpeechRecognition] Result:', { transcript, isFinal, confidence });
     onResult({ transcript, confidence, isFinal });
+  };
+
+  // Handle when recognition stops (auto-restart to keep listening)
+  recognition.onend = () => {
+    console.log('[SpeechRecognition] Recognition ended, shouldContinue:', shouldContinue);
+    
+    // Auto-restart if we should keep listening
+    if (shouldContinue) {
+      console.log('[SpeechRecognition] Auto-restarting recognition...');
+      try {
+        recognition.start();
+      } catch (error) {
+        console.error('[SpeechRecognition] Failed to restart:', error);
+      }
+    } else {
+      console.log('[SpeechRecognition] Recognition stopped by user');
+      onEnd();
+    }
   };
 
   // Handle speech end
   recognition.onspeechend = () => {
+    console.log('[SpeechRecognition] Speech ended (pause detected)');
     // Don't call onEnd here - it causes premature stopping
     // Let the user manually stop the recording
+    // The onend handler will auto-restart
   };
 
   // Handle errors
   recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    console.log('[SpeechRecognition] Error event:', event.error);
+    
     // Ignore transient errors that are common and don't indicate real problems
     switch (event.error) {
       case 'no-speech':
@@ -104,15 +128,18 @@ export const initializeSpeechRecognition = (
       case 'aborted':
         // This happens when recognition is manually stopped
         // Don't show as an error
+        shouldContinue = false;
         return;
       
       case 'audio-capture':
         console.error('Speech recognition error: audio-capture');
+        shouldContinue = false;
         onError('Microphone not found. Please check your microphone.');
         break;
       
       case 'not-allowed':
         console.error('Speech recognition error: not-allowed');
+        shouldContinue = false;
         onError('Microphone access denied. Please allow microphone access.');
         break;
       
@@ -127,8 +154,16 @@ export const initializeSpeechRecognition = (
 
   // Handle no match - don't treat as error, just continue listening
   recognition.onnomatch = () => {
-    console.log('No match found, continuing to listen...');
+    console.log('[SpeechRecognition] No match found, continuing to listen...');
     // Don't show error - this is normal during speech
+  };
+
+  // Add method to stop recognition properly
+  const originalStop = recognition.stop.bind(recognition);
+  recognition.stop = () => {
+    console.log('[SpeechRecognition] Stop called by user');
+    shouldContinue = false;
+    originalStop();
   };
 
   return recognition;
