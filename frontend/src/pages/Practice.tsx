@@ -168,18 +168,8 @@ const Practice = () => {
       const recognition = initializeSpeechRecognition(
         language,
         (result: SpeechRecognitionResult) => {
-          console.log('Speech result received:', { 
-            transcript: result.transcript, 
-            isFinal: result.isFinal,
-            confidence: result.confidence 
-          });
-          
           if (result.isFinal) {
-            setRecognizedText((prev) => {
-              const newText = prev + " " + result.transcript;
-              console.log('Final text updated:', newText.trim());
-              return newText;
-            });
+            setRecognizedText((prev) => prev + " " + result.transcript);
             setInterimText("");
           } else {
             setInterimText(result.transcript);
@@ -187,22 +177,14 @@ const Practice = () => {
         },
         () => {
           // Speech ended
-          console.log("Speech recognition ended");
         },
         (error: string) => {
-          console.error("Speech recognition error:", error);
           toast.error(error);
         }
       );
 
       if (recognition) {
         speechRecognitionRef.current = recognition;
-        
-        // Add onstart handler to confirm recognition started
-        recognition.onstart = () => {
-          console.log('Speech recognition started successfully');
-        };
-        
         recognition.start();
         setIsRecording(true);
         toast.success("Recording started! Speak clearly into the microphone.");
@@ -481,26 +463,6 @@ const Practice = () => {
                       (recognizing...)
                     </p>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* DEBUG PANEL - Shows recognition state */}
-          {isRecording && (
-            <Card className="max-w-2xl mx-auto shadow-soft border-yellow-500/30 bg-yellow-50/50">
-              <CardContent className="p-4">
-                <div className="space-y-2 text-sm">
-                  <div className="font-bold text-yellow-800">🐛 Debug Info:</div>
-                  <div className="text-yellow-700">
-                    <div>✓ Recording: {isRecording ? 'YES' : 'NO'}</div>
-                    <div>✓ Recognized Text Length: {recognizedText.length} chars</div>
-                    <div>✓ Recognized Text: "{recognizedText || '(empty)'}"</div>
-                    <div>✓ Interim Text: "{interimText || '(empty)'}"</div>
-                    <div className="mt-2 text-xs">
-                      Check browser console (F12) for detailed logs
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
