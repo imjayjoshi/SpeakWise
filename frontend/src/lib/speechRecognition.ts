@@ -86,8 +86,6 @@ export const initializeSpeechRecognition = (
 
   // Handle errors
   recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-    console.log('Speech recognition error:', event.error);
-    
     // Ignore transient errors that are common and don't indicate real problems
     switch (event.error) {
       case 'no-speech':
@@ -98,7 +96,9 @@ export const initializeSpeechRecognition = (
       
       case 'network':
         // Network errors are often transient with the Web Speech API
-        // Don't show error unless it persists
+        // This happens frequently even with good internet connection
+        // It's caused by temporary issues with Google's speech servers
+        // Don't show error or log it - it's just noise
         return;
       
       case 'aborted':
@@ -107,16 +107,19 @@ export const initializeSpeechRecognition = (
         return;
       
       case 'audio-capture':
+        console.error('Speech recognition error: audio-capture');
         onError('Microphone not found. Please check your microphone.');
         break;
       
       case 'not-allowed':
+        console.error('Speech recognition error: not-allowed');
         onError('Microphone access denied. Please allow microphone access.');
         break;
       
       default:
         // For other errors, only show if we haven't received any speech yet
         if (!hasReceivedSpeech) {
+          console.error('Speech recognition error:', event.error);
           onError(`Speech recognition error: ${event.error}`);
         }
     }
