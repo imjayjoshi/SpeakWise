@@ -233,18 +233,25 @@ const Practice = () => {
       return;
     }
 
+    // Calculate recording duration
+    const duration = recordingStartTime 
+      ? (Date.now() - recordingStartTime) / 1000 
+      : 0;
+
+    // Check if recording was too short
+    if (duration < 0.5) {
+      toast.error("Recording too short. Please speak the phrase and try again.");
+      return;
+    }
+
+    // Check if we got any speech
     if (!recognizedText || recognizedText.trim().length === 0) {
-      toast.error("No speech detected. Please speak clearly and try again.");
+      toast.error("No speech was detected. Please speak clearly into the microphone and try again. Make sure your microphone is working.");
       return;
     }
 
     try {
       setLoading(true);
-
-      // Calculate recording duration
-      const duration = recordingStartTime 
-        ? (Date.now() - recordingStartTime) / 1000 
-        : 0;
 
       // Analyze recording with REAL speech recognition data
       const analysisResult = analyzeRecording(
@@ -338,7 +345,7 @@ const Practice = () => {
   }
 
   const displayText = isRecording 
-    ? (recognizedText + " " + interimText).trim() || "Listening..."
+    ? (recognizedText + " " + interimText).trim() || "Speak now..."
     : recognizedText.trim() || "";
 
   return (

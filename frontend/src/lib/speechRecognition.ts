@@ -60,6 +60,9 @@ export const initializeSpeechRecognition = (
   recognition.lang = language;
   recognition.maxAlternatives = 1;
 
+  // Track if we've received any speech
+  let hasReceivedSpeech = false;
+
   // Handle results
   recognition.onresult = (event: SpeechRecognitionEvent) => {
     const results = Array.from(event.results);
@@ -69,41 +72,60 @@ export const initializeSpeechRecognition = (
     const confidence = lastResult[0].confidence;
     const isFinal = lastResult.isFinal;
 
+    // Mark that we've received speech
+    hasReceivedSpeech = true;
+
     onResult({ transcript, confidence, isFinal });
   };
 
   // Handle speech end
   recognition.onspeechend = () => {
-    onEnd();
+    // Don't call onEnd here - it causes premature stopping
+    // Let the user manually stop the recording
   };
 
   // Handle errors
   recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-    let errorMessage = 'Speech recognition error';
+    console.log('Speech recognition error:', event.error);
     
+    // Ignore transient errors that are common and don't indicate real problems
     switch (event.error) {
       case 'no-speech':
-        errorMessage = 'No speech detected. Please speak into the microphone.';
-        break;
-      case 'audio-capture':
-        errorMessage = 'Microphone not found. Please check your microphone.';
-        break;
-      case 'not-allowed':
-        errorMessage = 'Microphone access denied. Please allow microphone access.';
-        break;
+        // This is a common error that happens during pauses
+        // Don't show error to user, just let them continue
+        // The recognition will auto-restart
+        return;
+      
       case 'network':
-        errorMessage = 'Network error. Please check your internet connection.';
+        // Network errors are often transient with the Web Speech API
+        // Don't show error unless it persists
+        return;
+      
+      case 'aborted':
+        // This happens when recognition is manually stopped
+        // Don't show as an error
+        return;
+      
+      case 'audio-capture':
+        onError('Microphone not found. Please check your microphone.');
         break;
+      
+      case 'not-allowed':
+        onError('Microphone access denied. Please allow microphone access.');
+        break;
+      
       default:
-        errorMessage = `Speech recognition error: ${event.error}`;
+        // For other errors, only show if we haven't received any speech yet
+        if (!hasReceivedSpeech) {
+          onError(`Speech recognition error: ${event.error}`);
+        }
     }
-    
-    onError(errorMessage);
   };
 
-  // Handle no match
+  // Handle no match - don't treat as error, just continue listening
   recognition.onnomatch = () => {
-    onError('Speech not recognized. Please speak clearly.');
+    console.log('No match found, continuing to listen...');
+    // Don't show error - this is normal during speech
   };
 
   return recognition;
