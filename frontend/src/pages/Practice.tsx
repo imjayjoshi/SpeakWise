@@ -486,6 +486,26 @@ const Practice = () => {
             </Card>
           )}
 
+          {/* DEBUG PANEL - Shows recognition state */}
+          {isRecording && (
+            <Card className="max-w-2xl mx-auto shadow-soft border-yellow-500/30 bg-yellow-50/50">
+              <CardContent className="p-4">
+                <div className="space-y-2 text-sm">
+                  <div className="font-bold text-yellow-800">🐛 Debug Info:</div>
+                  <div className="text-yellow-700">
+                    <div>✓ Recording: {isRecording ? 'YES' : 'NO'}</div>
+                    <div>✓ Recognized Text Length: {recognizedText.length} chars</div>
+                    <div>✓ Recognized Text: "{recognizedText || '(empty)'}"</div>
+                    <div>✓ Interim Text: "{interimText || '(empty)'}"</div>
+                    <div className="mt-2 text-xs">
+                      Check browser console (F12) for detailed logs
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Recording Interface */}
           <div className="space-y-6 sm:space-y-8">
             {/* Waveform Visualization */}
