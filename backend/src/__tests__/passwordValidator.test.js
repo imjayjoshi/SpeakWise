@@ -1,4 +1,4 @@
-const { validatePassword, getPasswordStrength } = require('../passwordValidator');
+const { validatePassword, getPasswordStrength } = require('../utils/passwordValidator');
 
 describe('Password Validator', () => {
   describe('validatePassword', () => {
