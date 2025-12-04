@@ -10,6 +10,7 @@
     "test:security": "cd backend && npm audit && cd ../frontend && npm audit"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.57.0",
+    "artillery": "^2.0.27"
   }
 }
