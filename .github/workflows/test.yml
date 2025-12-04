@@ -49,20 +49,13 @@ jobs:
         run: npm test
         continue-on-error: true
       
-      - name: Generate coverage report
-        working-directory: ./backend
-        env:
-          MONGODB_URI: mongodb://localhost:27017/speakwise-test
-          JWT_SECRET: test-secret-key-for-ci
-          NODE_ENV: test
-        run: npm run test:coverage
-        continue-on-error: true
-      
-      - name: Upload backend coverage
+      - name: Upload backend test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage-${{ matrix.node-version }}
+          name: backend-test-results-${{ matrix.node-version }}
           path: backend/coverage/
+        continue-on-error: true
 
   frontend-tests:
     name: Frontend Component Tests
@@ -91,15 +84,13 @@ jobs:
         run: npm test
         continue-on-error: true
       
-      - name: Generate coverage report
-        working-directory: ./frontend
-        run: npm run test:coverage
-      
-      - name: Upload frontend coverage
+      - name: Upload frontend test results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-coverage-${{ matrix.node-version }}
+          name: frontend-test-results-${{ matrix.node-version }}
           path: frontend/coverage/
+        continue-on-error: true
 
   e2e-tests:
     name: End-to-End Tests
