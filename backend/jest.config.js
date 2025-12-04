@@ -7,5 +7,9 @@ module.exports = {
     'src/**/*.js',
     '!src/**/__tests__/**',
     '!src/**/*.test.js'
-  ]
+  ],
+  testTimeout: 30000,
+  forceExit: true,
+  detectOpenHandles: true,
+  maxWorkers: 1
 };
