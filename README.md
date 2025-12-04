@@ -112,6 +112,60 @@ SpeakWise/
 - ✅ Health check endpoints
 - ✅ Environment templates provided
 - ✅ Comprehensive deployment guide
+- ✅ Comprehensive testing suite
+
+## 🧪 Testing
+
+SpeakWise includes a comprehensive testing infrastructure covering all aspects of the application:
+
+### Test Suites
+
+- **Frontend Tests** - Component tests with Vitest + React Testing Library
+- **Backend Tests** - Unit & integration tests with Jest + Supertest
+- **E2E Tests** - End-to-end tests with Playwright (Chrome, Firefox, Safari, Mobile)
+- **Performance Tests** - Load testing with Artillery
+- **Security Tests** - Dependency scanning, CodeQL, secret detection
+
+### Running Tests
+
+```bash
+# Run all tests
+npm run test:all
+
+# Individual test suites
+npm run test:backend        # Backend unit tests
+npm run test:frontend       # Frontend component tests
+npm run test:e2e           # End-to-end tests
+npm run test:performance   # Performance/load tests
+npm run test:security      # Security audits
+```
+
+### Test Coverage
+
+- **Backend**: >80% coverage (statements, branches, functions, lines)
+- **Frontend**: >70% coverage (statements, branches, functions, lines)
+- **E2E**: Complete user flow coverage across 5 browser configurations
+
+### CI/CD Testing
+
+Automated testing runs on every push/PR via GitHub Actions:
+- ✅ Backend unit tests (Node 18.x, 20.x)
+- ✅ Frontend component tests (Node 18.x, 20.x)
+- ✅ E2E tests (multi-browser)
+- ✅ Security scanning (weekly + on-demand)
+- ✅ Coverage reporting
+
+### Test Reports
+
+```bash
+# Generate coverage reports
+cd backend && npm run test:coverage
+cd frontend && npm run test:coverage
+
+# View E2E test report
+npm run test:e2e:report
+```
+
 
 ## 🚀 Deployment
 

@@ -1,0 +1,44 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 20
+      name: "Peak load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Authentication Load Test"
+    flow:
+      - post:
+          url: "/api/auth/user/register"
+          json:
+            fullName: "Load Test User {{ $randomString() }}"
+            email: "loadtest{{ $randomNumber(1, 100000) }}@example.com"
+            password: "Test@123456"
+          capture:
+            - json: "$.user._id"
+              as: "userId"
+      - post:
+          url: "/api/auth/user/login"
+          json:
+            email: "loadtest{{ $randomNumber(1, 100000) }}@example.com"
+            password: "Test@123456"
+          capture:
+            - header: "set-cookie"
+              as: "authCookie"
+      - get:
+          url: "/api/auth/me"
+          headers:
+            Cookie: "{{ authCookie }}"
+      - get:
+          url: "/api/auth/user/logout"
+          headers:
+            Cookie: "{{ authCookie }}"

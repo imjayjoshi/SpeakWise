@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:e2e",
+    "test:performance": "artillery run performance/auth-load.yml && artillery run performance/phrase-load.yml",
+    "test:security": "cd backend && npm audit && cd ../frontend && npm audit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0"
+  }
+}

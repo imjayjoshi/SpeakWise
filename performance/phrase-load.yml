@@ -1,0 +1,47 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Ramp up"
+    - duration: 120
+      arrivalRate: 20
+      name: "Sustained load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Phrase Retrieval Load Test"
+    flow:
+      # Login first
+      - post:
+          url: "/api/auth/user/login"
+          json:
+            email: "test@example.com"
+            password: "Test@123456"
+          capture:
+            - header: "set-cookie"
+              as: "authCookie"
+      
+      # Get phrases by different levels
+      - get:
+          url: "/api/phrase/level/beginner"
+          headers:
+            Cookie: "{{ authCookie }}"
+      
+      - get:
+          url: "/api/phrase/level/intermediate"
+          headers:
+            Cookie: "{{ authCookie }}"
+      
+      - get:
+          url: "/api/phrase/level/expert"
+          headers:
+            Cookie: "{{ authCookie }}"
+      
+      # Get random phrase
+      - get:
+          url: "/api/phrase/random"
+          headers:
+            Cookie: "{{ authCookie }}"
