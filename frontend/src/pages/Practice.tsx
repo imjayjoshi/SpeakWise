@@ -336,10 +336,12 @@ const Practice = () => {
         audioRef.current.pause();
         audioRef.current = null;
       }
-      if (isPlaying && "speechSynthesis" in window) {
+      // Always cancel speech synthesis if available (safe to call even if not playing)
+      if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
-      if (mediaRecorderRef.current && isRecording) {
+      // Stop media recorder if it exists (the ref check is sufficient)
+      if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
       }
       if (speechRecognitionRef.current) {
