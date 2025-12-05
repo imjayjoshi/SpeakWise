@@ -5,7 +5,8 @@ import { phraseAPI, practiceHistoryAPI, Phrase } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mic, Square, ArrowLeft, Volume2, Loader2 } from "lucide-react";
+import { Mic, Square, ArrowLeft, Volume2, Loader2, Smartphone, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   initializeSpeechRecognition,
   analyzeRecording,
@@ -26,11 +27,33 @@ const Practice = () => {
   const [recognizedText, setRecognizedText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [recordingStartTime, setRecordingStartTime] = useState<number>(0);
+  
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || '';
+      const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      setIsMobile(mobile);
+      
+      // Check if speech recognition is supported
+      const hasSpeechRecognition = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+      
+      if (mobile && !hasSpeechRecognition) {
+        setShowMobileWarning(true);
+      }
+    };
+    
+    checkMobile();
+  }, []);
 
   useEffect(() => {
     const fetchPhrase = async () => {
@@ -373,6 +396,22 @@ const Practice = () => {
           </div>
         </div>
       </header>
+
+      {/* Mobile Device Warning */}
+      {showMobileWarning && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="ml-2">
+              <strong>Mobile Device Detected:</strong> Speech recognition is not supported on iOS (iPhone/iPad) and has limited support on Android.
+              <br />
+              <strong>Recommendation:</strong> For the best experience, please use this app on a desktop/laptop with Chrome, Edge, or Brave browser.
+              <br />
+              <strong>Alternative:</strong> You can still listen to phrases and practice speaking, but automatic speech recognition won't work on your device.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       {/* Practice Arena */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
