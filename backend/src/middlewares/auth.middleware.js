@@ -22,7 +22,7 @@ async function authUser(req, res, next) {
   }
 }
 
-// For admin authoraization
+// For admin authorization
 async function authAdmin(req, res, next) {
   const token = req.cookies.token;
   if (!token) {
@@ -32,9 +32,15 @@ async function authAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await userModel.findById(decoded.id);
-    if (!user || user.role !== "admin") {
+    if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
+    
+    // Check if user is admin
+    if (user.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    
     req.user = user;
     next();
   } catch (error) {

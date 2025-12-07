@@ -4,8 +4,8 @@ const User = require("../models/user.model");
 
 async function savePracticeResult(req, res) {
   try {
-    const { phraseId } = req.params;
     const {
+      phraseId,
       score,
       accuracy,
       fluency,
@@ -15,10 +15,15 @@ async function savePracticeResult(req, res) {
       duration,
     } = req.body;
 
-    // valude phrase exists
+    // Validate phraseId
+    if (!phraseId) {
+      return res.status(400).json({ success: false, message: "Phrase ID is required" });
+    }
+
+    // Validate phrase exists
     const phrase = await Phrase.findById(phraseId);
     if (!phrase) {
-      return res.status(404).json({ message: "Phrase not found" });
+      return res.status(404).json({ success: false, message: "Phrase not found" });
     }
 
     // Check if user alreadt practiced this phrase
@@ -58,7 +63,7 @@ async function savePracticeResult(req, res) {
     console.error("Error saving practice result:", error);
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ success: false, message: "Internal server error", error: error.message });
   }
 }
 

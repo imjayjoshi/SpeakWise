@@ -18,12 +18,13 @@ async function addPhrase(req, res) {
 
     // Validate required fields
     if (!text || !level) {
-      return res.status(400).json({ message: "Text and level are required" });
+      return res.status(400).json({ success: false, message: "Text and level are required" });
     }
 
     // Validate level
     if (!["beginner", "intermediate", "expert"].includes(level)) {
       return res.status(400).json({
+        success: false,
         message: "Invalid level. Must be beginner, intermediate, or expert",
       });
     }
@@ -40,6 +41,7 @@ async function addPhrase(req, res) {
     });
 
     res.status(201).json({
+      success: true,
       message: "Phrase added successfully",
       phrase,
     });
@@ -88,6 +90,7 @@ async function updatePhrase(req, res) {
     // Validate level if provided
     if (level && !["beginner", "intermediate", "expert"].includes(level)) {
       return res.status(400).json({
+        success: false,
         message: "Invalid level. Must be beginner, intermediate, or expert",
       });
     }
@@ -107,10 +110,11 @@ async function updatePhrase(req, res) {
     );
 
     if (!phrase) {
-      return res.status(404).json({ message: "Phrase not found" });
+      return res.status(404).json({ success: false, message: "Phrase not found" });
     }
 
     res.status(200).json({
+      success: true,
       message: "Phrase updated successfully",
       phrase,
     });
@@ -130,10 +134,11 @@ async function deletePhrase(req, res) {
     const phrase = await Phrase.findByIdAndDelete(id);
 
     if (!phrase) {
-      return res.status(404).json({ message: "Phrase not found" });
+      return res.status(404).json({ success: false, message: "Phrase not found" });
     }
 
     res.status(200).json({
+      success: true,
       message: "Phrase deleted successfully",
       deletedPhrase: phrase,
     });

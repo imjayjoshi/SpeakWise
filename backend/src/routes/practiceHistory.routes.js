@@ -5,26 +5,26 @@ const router = express.Router();
 
 // save practice result
 router.post(
-  "/practice/:phraseId",
+  "/save",
   authUser,
   practiceHistoryController.savePracticeResult
 );
 
 // get User's practice History
 router.get(
-  "/history",
+  "/user",
   authUser,
   practiceHistoryController.getUserPracticeHistory
 );
 
 // get User statistics
 router.get(
-  "/statistics",
+  "/stats",
   authUser,
   practiceHistoryController.getUserStatistics
 );
 
-// get practice historyt for specific phrase
+// get practice history for specific phrase
 router.get(
   "/phrase/:phraseId",
   authUser,
