@@ -20,7 +20,10 @@ const Navbar = () => {
               <Link to="/#features" onClick={(e) => {
                 if (window.location.pathname === '/') {
                   e.preventDefault();
-                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                  const element = document.getElementById('features');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
                 }
               }}>Features</Link>
             </Button>
@@ -28,7 +31,10 @@ const Navbar = () => {
               <Link to="/#works" onClick={(e) => {
                 if (window.location.pathname === '/') {
                   e.preventDefault();
-                  document.getElementById('works')?.scrollIntoView({ behavior: 'smooth' });
+                  const element = document.getElementById('works');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
                 }
               }}>How It Works</Link>
             </Button>

@@ -1,33 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Mic, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/hero-soundwave.png";
 import mockupImage from "@/assets/app-mockup.png";
 import { Link } from "react-router";
-import LocomotiveScroll from "locomotive-scroll";
-import "locomotive-scroll/dist/locomotive-scroll.css";
 import Works from "./Works";
 import Features from "./Features";
 
 const LandingPage = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!scrollRef.current) return;
-
-    const scroll = new LocomotiveScroll({
-      el: scrollRef.current,
-      smooth: true,
-      multiplier: 1,
-      class: "is-reveal",
-    });
-
-    return () => {
-      scroll.destroy();
-    };
-  }, []);
-
   // Handle scrolling to section when page loads with hash
   useEffect(() => {
     const hash = window.location.hash;
@@ -36,18 +17,14 @@ const LandingPage = () => {
       setTimeout(() => {
         const element = document.querySelector(hash);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 100);
     }
   }, []);
 
   return (
-    <div
-      ref={scrollRef}
-      data-scroll-container
-      className="min-h-screen bg-background"
-    >
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">

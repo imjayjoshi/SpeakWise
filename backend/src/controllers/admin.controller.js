@@ -348,8 +348,23 @@ async function getSystemStatistics(req, res) {
       createdAt: { $gte: today },
     });
 
+    // Format phrasesByLevel for frontend
+    const formattedPhrasesByLevel = phrasesByLevel.map(item => ({
+      level: item._id,
+      count: item.count
+    }));
+
+    // Return data in format expected by frontend
     res.status(200).json({
       success: true,
+      totalUsers,
+      activeUsers,
+      totalPhrases,
+      totalPractices,
+      avgPronunciationScore: Math.round(avgSystemScore[0]?.avgScore || 0),
+      phrasesByLevel: formattedPhrasesByLevel,
+      newUsersLast30Days: recentUsers,
+      // Also include nested format for backward compatibility
       statistics: {
         users: {
           total: totalUsers,
