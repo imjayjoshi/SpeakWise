@@ -11,6 +11,14 @@ class EmailService {
 
   initializeTransporter() {
     try {
+      // Check if email credentials are configured
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+        console.warn('⚠️  Email service not configured. EMAIL_USER and EMAIL_PASSWORD environment variables are required.');
+        console.warn('⚠️  Password reset emails will not be sent until email is configured.');
+        this.transporter = null;
+        return;
+      }
+
       this.transporter = nodemailer.createTransport({
         service: process.env.EMAIL_SERVICE || 'gmail',
         auth: {
@@ -19,9 +27,11 @@ class EmailService {
         },
       });
 
-      console.log('Email service initialized successfully');
+      console.log('✅ Email service initialized successfully');
+      console.log(`📧 Email will be sent from: ${process.env.EMAIL_USER}`);
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      console.error('❌ Failed to initialize email service:', error.message);
+      this.transporter = null;
     }
   }
 
@@ -34,7 +44,7 @@ class EmailService {
   async sendPasswordResetEmail(email, resetToken, userName) {
     try {
       if (!this.transporter) {
-        throw new Error('Email service not initialized');
+        throw new Error('Email service not configured. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
       }
 
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
