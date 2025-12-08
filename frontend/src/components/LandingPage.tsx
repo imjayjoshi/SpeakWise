@@ -28,6 +28,20 @@ const LandingPage = () => {
     };
   }, []);
 
+  // Handle scrolling to section when page loads with hash
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      // Wait for page to render, then scroll
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, []);
+
   return (
     <div
       ref={scrollRef}

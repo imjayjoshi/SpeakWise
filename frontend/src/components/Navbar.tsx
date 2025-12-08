@@ -17,10 +17,20 @@ const Navbar = () => {
           </Link>
           <div className="hidden md:flex items-center space-x-4">
             <Button variant="ghost" size="sm" asChild>
-              <a href="/#features">Features</a>
+              <Link to="/#features" onClick={(e) => {
+                if (window.location.pathname === '/') {
+                  e.preventDefault();
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}>Features</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <a href="/#works">How It Works</a>
+              <Link to="/#works" onClick={(e) => {
+                if (window.location.pathname === '/') {
+                  e.preventDefault();
+                  document.getElementById('works')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}>How It Works</Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/login">Sign In</Link>

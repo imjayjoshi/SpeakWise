@@ -56,7 +56,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState<
     "English" | "Japanese" | "All"
-  >("All");
+  >("English");
   const [practicedPhrases, setPracticedPhrases] = useState<Map<string, number>>(new Map());
   const navigate = useNavigate();
 
