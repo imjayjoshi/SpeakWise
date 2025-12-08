@@ -4,8 +4,10 @@ const User = require("../models/user.model");
 
 async function savePracticeResult(req, res) {
   try {
+    // Support phraseId from both URL params (/practice/:phraseId) and body (/save)
+    const phraseId = req.params.phraseId || req.body.phraseId;
+    
     const {
-      phraseId,
       score,
       accuracy,
       fluency,

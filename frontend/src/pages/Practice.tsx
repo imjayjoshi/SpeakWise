@@ -263,13 +263,23 @@ const Practice = () => {
 
     // Check if recording was too short
     if (duration < 0.5) {
-      toast.error("Recording too short. Please speak the phrase and try again.");
+      toast.error(
+        "Recording too short (less than 0.5 seconds). Please speak the entire phrase and try again.",
+        { duration: 4000 }
+      );
       return;
     }
 
     // Check if we got any speech
     if (!recognizedText || recognizedText.trim().length === 0) {
-      toast.error("No speech was detected. Please speak clearly into the microphone and try again. Make sure your microphone is working.");
+      toast.error(
+        "No speech detected. Please try again:\n" +
+        "• Speak clearly and loudly into your microphone\n" +
+        "• Make sure your microphone is working\n" +
+        "• Check that your browser has microphone permissions\n" +
+        "• Ensure you're not muted",
+        { duration: 6000 }
+      );
       return;
     }
 

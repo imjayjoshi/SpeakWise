@@ -10,6 +10,13 @@ router.post(
   practiceHistoryController.savePracticeResult
 );
 
+// Alias route for frontend compatibility - save practice result with phraseId in URL
+router.post(
+  "/practice/:phraseId",
+  authUser,
+  practiceHistoryController.savePracticeResult
+);
+
 // get User's practice History
 router.get(
   "/user",
@@ -17,9 +24,23 @@ router.get(
   practiceHistoryController.getUserPracticeHistory
 );
 
+// Alias route for frontend compatibility - get practice history
+router.get(
+  "/history",
+  authUser,
+  practiceHistoryController.getUserPracticeHistory
+);
+
 // get User statistics
 router.get(
   "/stats",
+  authUser,
+  practiceHistoryController.getUserStatistics
+);
+
+// Alias route for frontend compatibility - get user statistics
+router.get(
+  "/statistics",
   authUser,
   practiceHistoryController.getUserStatistics
 );
