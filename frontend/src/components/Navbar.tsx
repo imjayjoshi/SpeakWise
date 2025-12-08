@@ -17,10 +17,10 @@ const Navbar = () => {
           </Link>
           <div className="hidden md:flex items-center space-x-4">
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/features">Features</Link>
+              <a href="/#features">Features</a>
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/works">How It Works</Link>
+              <a href="/#works">How It Works</a>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/login">Sign In</Link>
