@@ -1,47 +1,30 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 /**
- * Email service for sending password reset emails
+ * Email service for sending password reset emails using Resend
  */
 class EmailService {
   constructor() {
-    this.transporter = null;
-    this.initializeTransporter();
+    this.resend = null;
+    this.initializeResend();
   }
 
-  initializeTransporter() {
+  initializeResend() {
     try {
-      // Check if email credentials are configured
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-        console.warn('⚠️  Email service not configured. EMAIL_USER and EMAIL_PASSWORD environment variables are required.');
-        console.warn('⚠️  Password reset emails will not be sent until email is configured.');
-        this.transporter = null;
+      // Check if Resend API key is configured
+      if (!process.env.RESEND_API_KEY) {
+        console.warn('⚠️  Email service not configured. RESEND_API_KEY environment variable is required.');
+        console.warn('⚠️  Password reset emails will not be sent until Resend is configured.');
+        console.warn('⚠️  Get your API key from: https://resend.com/api-keys');
+        this.resend = null;
         return;
       }
 
-      // Configure transporter with explicit settings for better compatibility
-      this.transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // true for 465, false for other ports
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-        tls: {
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3'
-        },
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 10000,
-      });
-
-      console.log('✅ Email service initialized successfully');
-      console.log(`📧 Email will be sent from: ${process.env.EMAIL_USER}`);
+      this.resend = new Resend(process.env.RESEND_API_KEY);
+      console.log('✅ Resend email service initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize email service:', error.message);
-      this.transporter = null;
+      console.error('❌ Failed to initialize Resend:', error.message);
+      this.resend = null;
     }
   }
 
@@ -53,15 +36,15 @@ class EmailService {
    */
   async sendPasswordResetEmail(email, resetToken, userName) {
     try {
-      if (!this.transporter) {
-        throw new Error('Email service not configured. Please set EMAIL_USER and EMAIL_PASSWORD environment variables.');
+      if (!this.resend) {
+        throw new Error('Email service not configured. Please set RESEND_API_KEY environment variable. Get it from: https://resend.com/api-keys');
       }
 
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
       
-      const mailOptions = {
-        from: `"SpeakWise" <${process.env.EMAIL_USER}>`,
-        to: email,
+      const { data, error } = await this.resend.emails.send({
+        from: 'SpeakWise <onboarding@resend.dev>',
+        to: [email],
         subject: 'Password Reset Request - SpeakWise',
         html: `
           <!DOCTYPE html>
@@ -168,13 +151,17 @@ If you didn't request this, please ignore this email. Your password won't change
 Best regards,
 The SpeakWise Team
         `,
-      };
+      });
 
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log('Password reset email sent:', info.messageId);
-      return { success: true, messageId: info.messageId };
+      if (error) {
+        console.error('Resend API error:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('✅ Password reset email sent successfully:', data.id);
+      return { success: true, messageId: data.id };
     } catch (error) {
-      console.error('Error sending password reset email:', error);
+      console.error('❌ Error sending password reset email:', error);
       throw new Error('Failed to send password reset email');
     }
   }
@@ -184,14 +171,13 @@ The SpeakWise Team
    */
   async verifyConnection() {
     try {
-      if (!this.transporter) {
-        throw new Error('Email service not initialized');
+      if (!this.resend) {
+        return false;
       }
-      await this.transporter.verify();
-      console.log('Email service is ready to send emails');
+      console.log('✅ Resend email service is ready');
       return true;
     } catch (error) {
-      console.error('Email service verification failed:', error);
+      console.error('❌ Resend verification failed:', error);
       return false;
     }
   }
