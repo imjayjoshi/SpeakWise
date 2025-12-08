@@ -1,8 +1,5 @@
 const { Resend } = require('resend');
 
-/**
- * Email service for sending password reset emails using Resend
- */
 class EmailService {
   constructor() {
     this.resend = null;
@@ -11,7 +8,7 @@ class EmailService {
 
   initializeResend() {
     try {
-      // Check if Resend API key is configured
+      
       if (!process.env.RESEND_API_KEY) {
         console.warn('⚠️  Email service not configured. RESEND_API_KEY environment variable is required.');
         console.warn('⚠️  Password reset emails will not be sent until Resend is configured.');
@@ -99,7 +96,7 @@ class EmailService {
             <body>
               <div class="container">
                 <div class="header">
-                  <h1>🔐 Password Reset Request</h1>
+                  <h1>Password Reset Request</h1>
                 </div>
                 <div class="content">
                   <p>Hi ${userName},</p>
@@ -116,7 +113,7 @@ class EmailService {
                   <p style="word-break: break-all; color: #667eea;">${resetUrl}</p>
                   
                   <div class="warning">
-                    <strong>⚠️ Important:</strong>
+                    <strong>Important:</strong>
                     <ul>
                       <li>This link will expire in <strong>1 hour</strong></li>
                       <li>If you didn't request this, please ignore this email</li>
