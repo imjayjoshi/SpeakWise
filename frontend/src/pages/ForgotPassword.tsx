@@ -59,15 +59,35 @@ const ForgotPassword = () => {
               </ol>
             </div>
 
-            <div className="text-center text-sm text-muted-foreground">
+            <div className="text-center text-sm text-muted-foreground space-y-2">
               <p>Didn't receive the email?</p>
-              <Button
-                variant="link"
-                onClick={() => setEmailSent(false)}
-                className="text-primary"
-              >
-                Try again
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button
+                  variant="outline"
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4" />
+                      Resend Email Code
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => setEmailSent(false)}
+                  className="text-primary"
+                >
+                  Try different email
+                </Button>
+              </div>
             </div>
 
             <Button
