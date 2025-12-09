@@ -11,6 +11,7 @@ interface PasswordInputProps {
   name?: string;
   disabled?: boolean;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export const PasswordInput = ({ 
@@ -20,7 +21,8 @@ export const PasswordInput = ({
   id,
   name,
   disabled,
-  className 
+  className,
+  autoFocus
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,6 +37,7 @@ export const PasswordInput = ({
         placeholder={placeholder}
         disabled={disabled}
         className={className}
+        autoFocus={autoFocus}
       />
       <Button
         type="button"
