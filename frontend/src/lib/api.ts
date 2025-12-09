@@ -32,12 +32,9 @@ export const authAPI = {
   updatePassword: (data: { currentPassword: string; newPassword: string }) =>
     api.put("/auth/password", data),
 
-  // Forgot Password
-  requestPasswordReset: (email: string) =>
-    api.post("/auth/forgot-password", { email }),
-
-  resetPassword: (token: string, newPassword: string) =>
-    api.post(`/auth/reset-password/${token}`, { newPassword }),
+  // Forgot Password - Direct Reset
+  requestPasswordReset: (email: string, newPassword: string) =>
+    api.post("/auth/forgot-password", { email, newPassword }),
 };
 
 // Phrase APIs
@@ -127,7 +124,7 @@ export const adminUserAPI = {
   getUserDetails: (userId: string) => api.get(`/admin/users/${userId}`),
 
   // Update user
-  updateUser: (userId: string, data: any) =>
+  updateUser: (userId: string, data: unknown) =>
     api.put(`/admin/users/${userId}`, data),
 
   // Update user password (admin only)

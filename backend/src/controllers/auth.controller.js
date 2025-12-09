@@ -271,10 +271,18 @@ async function updatePassword(req, res) {
   }
 }
 
-// Request password reset (sends email with reset link)
+// Direct password reset (no email verification)
 async function requestPasswordReset(req, res) {
   try {
-    const { email } = req.body;
+    const { email, newPassword } = req.body;
+
+    // Validate input
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and new password are required"
+      });
+    }
 
     // Find user by email
     const user = await userModel.findOne({ email });
@@ -285,42 +293,37 @@ async function requestPasswordReset(req, res) {
       });
     }
 
-    // Generate reset token
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    
-    // Hash token and save to database
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-    await user.save();
+    // Validate password strength
+    const { validatePassword } = require('../utils/passwordValidator');
+    const validation = validatePassword(newPassword);
 
-    // Send email
-    try {
-      const emailService = require('../utils/emailService');
-      await emailService.sendPasswordResetEmail(email, resetToken, user.fullName);
-      
-      res.status(200).json({
-        success: true,
-        message: "Password reset link sent to your email"
-      });
-    } catch (emailError) {
-      // Rollback token if email fails
-      user.resetPasswordToken = null;
-      user.resetPasswordExpires = null;
-      await user.save();
-      
-      console.error('Email sending failed:', emailError);
-      res.status(500).json({
+    if (!validation.isValid) {
+      return res.status(400).json({
         success: false,
-        message: "Failed to send reset email. Please try again later."
+        message: 'Password does not meet requirements',
+        errors: validation.errors
       });
     }
+
+    // Hash new password and update user
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    
+    // Clear any existing reset tokens
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully. You can now login with your new password."
+    });
   } catch (error) {
-    console.error('Password reset request error:', error);
+    console.error('Password reset error:', error);
     res.status(500).json({
       success: false,
-      message: "Failed to process password reset request"
+      message: "Failed to reset password"
     });
   }
 }
