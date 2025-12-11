@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { toast } from "sonner";
 import { authAPI } from "@/lib/api";
 import {
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Save, Key, User, Mail, Phone, Award, Flame } from "lucide-react";
+import { Save, Key, User, Mail, Phone, Award, Flame, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -137,6 +137,12 @@ const UserProfile = () => {
     <div className="min-h-screen bg-background">
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
+          <Link to="/dashboard">
+            <Button variant="ghost" size="sm" className="mb-4">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </Link>
           <h2 className="text-3xl font-bold text-foreground">My Profile</h2>
           <p className="text-muted-foreground">
             Manage your personal information and account settings
