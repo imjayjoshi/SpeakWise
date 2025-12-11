@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { toast } from "sonner";
-import { authAPI, phraseAPI, Phrase, practiceHistoryAPI } from "@/lib/api";
+import { authAPI, phraseAPI, Phrase, practiceHistoryAPI, Level } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +27,7 @@ import {
   Globe,
   User,
   CheckCircle2,
+  Lock,
 } from "lucide-react";
 import {
   Select,
@@ -35,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { isLevelAccessible, getLockedLevelMessage } from "@/lib/levelAccessControl";
 
 interface LevelCategory {
   id: string;
@@ -47,7 +49,7 @@ interface LevelCategory {
 }
 
 const Dashboard = () => {
-  const [user, setUser] = useState<{ fullName: string; streak: number } | null>(
+  const [user, setUser] = useState<{ fullName: string; streak: number; languageLevel?: Level } | null>(
     null
   );
   const [allPhrases, setAllPhrases] = useState<Phrase[]>([]);
@@ -58,6 +60,7 @@ const Dashboard = () => {
     "English" | "Japanese" | "All"
   >("English");
   const [practicedPhrases, setPracticedPhrases] = useState<Map<string, number>>(new Map());
+  const [userLanguageLevel, setUserLanguageLevel] = useState<Level>("beginner");
   const navigate = useNavigate();
 
   // Fetch user and phrases data
@@ -66,7 +69,9 @@ const Dashboard = () => {
       try {
         // Fetch user data
         const userRes = await authAPI.getMe();
-        setUser(userRes.data.user);
+        const userData = userRes.data.user;
+        setUser(userData);
+        setUserLanguageLevel(userData.languageLevel || "beginner");
 
         // Fetch phrases by each level
         const [beginnerRes, intermediateRes, expertRes] = await Promise.all([
@@ -383,50 +388,86 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {levelCategories.map((category) => (
-                    <div
-                      key={category.id}
-                      className="p-3 sm:p-4 rounded-lg border hover:shadow-soft transition-all duration-300 group cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                          <div className={`${category.color} flex-shrink-0`}>
-                            {category.icon}
-                          </div>
-                          <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
-                            {category.title}
-                          </h3>
-                        </div>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs flex-shrink-0"
-                        >
-                          {category.phrases}
-                        </Badge>
-                      </div>
-
-                      <Progress
-                        value={
-                          (category.completed / (category.phrases || 1)) * 100
-                        }
-                        className="h-2 mb-3"
-                      />
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors text-xs sm:text-sm"
-                        asChild
-                        disabled={category.phrases === 0}
+                  {levelCategories.map((category) => {
+                    const isAccessible = isLevelAccessible(
+                      category.level as Level,
+                      userLanguageLevel
+                    );
+                    const isDisabled = !isAccessible || category.phrases === 0;
+                    
+                    return (
+                      <div
+                        key={category.id}
+                        className={`p-3 sm:p-4 rounded-lg border transition-all duration-300 group ${
+                          isAccessible
+                            ? "hover:shadow-soft cursor-pointer"
+                            : "opacity-60 cursor-not-allowed"
+                        }`}
                       >
-                        <Link
-                          to={`/level/${category.level}?lang=${selectedLanguage}`}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className={`${category.color} flex-shrink-0`}>
+                              {category.icon}
+                            </div>
+                            <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">
+                              {category.title}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!isAccessible && (
+                              <Lock className="w-4 h-4 text-muted-foreground" />
+                            )}
+                            <Badge
+                              variant="secondary"
+                              className="text-xs flex-shrink-0"
+                            >
+                              {category.phrases}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <Progress
+                          value={
+                            (category.completed / (category.phrases || 1)) * 100
+                          }
+                          className="h-2 mb-3"
+                        />
+
+                        {!isAccessible && (
+                          <p className="text-xs text-muted-foreground mb-2 italic">
+                            {getLockedLevelMessage(
+                              category.level as Level,
+                              userLanguageLevel
+                            )}
+                          </p>
+                        )}
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`w-full transition-colors text-xs sm:text-sm ${
+                            isAccessible
+                              ? "group-hover:bg-primary group-hover:text-primary-foreground"
+                              : ""
+                          }`}
+                          asChild={isAccessible && !isDisabled}
+                          disabled={isDisabled}
                         >
-                          Start Learning ({category.phrases})
-                        </Link>
-                      </Button>
-                    </div>
-                  ))}
+                          {isAccessible && !isDisabled ? (
+                            <Link
+                              to={`/level/${category.level}?lang=${selectedLanguage}`}
+                            >
+                              Start Learning ({category.phrases})
+                            </Link>
+                          ) : (
+                            <span>
+                              {!isAccessible ? "Locked" : "No Phrases"}
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

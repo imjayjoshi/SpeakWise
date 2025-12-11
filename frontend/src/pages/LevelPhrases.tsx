@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { phraseAPI, Phrase, practiceHistoryAPI } from "@/lib/api";
+import { phraseAPI, Phrase, practiceHistoryAPI, authAPI, Level } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Play, Mic, Volume2, BookOpen, Loader2, CheckCircle2 } from "lucide-react";
+import { isLevelAccessible } from "@/lib/levelAccessControl";
 
 const LevelPhrases = () => {
   const { level } = useParams();
@@ -28,6 +29,17 @@ const LevelPhrases = () => {
     const fetchPhrases = async () => {
       try {
         if (!level) {
+          navigate("/dashboard");
+          return;
+        }
+
+        // Fetch user data to check access level
+        const userRes = await authAPI.getMe();
+        const userLevel = userRes.data.user.languageLevel || "beginner";
+
+        // Check if user can access this level
+        if (!isLevelAccessible(level as Level, userLevel)) {
+          toast.error(`You don't have access to ${level} level yet. Complete previous levels first.`);
           navigate("/dashboard");
           return;
         }
