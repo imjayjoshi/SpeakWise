@@ -1,0 +1,1069 @@
+================================================================================
+                    SPEAKWISE - APPLICATION DOCUMENTATION
+                    AI-Powered Pronunciation Coach
+================================================================================
+
+Created for: College Presentation Reference
+Date: December 12, 2025
+
+================================================================================
+                              PROJECT OVERVIEW
+================================================================================
+
+SpeakWise is an AI-powered language pronunciation coaching web application 
+that helps users improve their speaking skills through:
+- Real-time speech recognition
+- Pronunciation analysis and scoring
+- Progressive learning levels (Beginner → Intermediate → Expert)
+- Practice history tracking
+- User progress analytics
+
+Technology Stack:
+- Frontend: React (TypeScript) + Vite + TailwindCSS
+- Backend: Node.js + Express.js
+- Database: MongoDB (Mongoose ODM)
+- Authentication: JWT (JSON Web Tokens) with HTTP-only cookies
+- Speech Recognition: Web Speech API
+
+================================================================================
+                           PROJECT STRUCTURE
+================================================================================
+
+SpeakWise/
+├── frontend/                    # React Frontend Application
+│   └── src/
+│       ├── App.tsx             # Main app component with providers
+│       ├── main.tsx            # React entry point
+│       ├── pages/              # All page components
+│       ├── components/         # Reusable UI components
+│       ├── lib/                # Utility functions and API
+│       ├── hooks/              # Custom React hooks
+│       └── routes/             # Application routing
+│
+├── backend/                     # Node.js Backend API
+│   └── src/
+│       ├── app.js              # Express app configuration
+│       ├── controllers/        # Business logic handlers
+│       ├── models/             # MongoDB schemas
+│       ├── routes/             # API route definitions
+│       ├── middlewares/        # Authentication & validation
+│       ├── utils/              # Helper utilities
+│       └── db/                 # Database connection
+
+================================================================================
+                         FRONTEND - PAGE FILES
+================================================================================
+
+Location: frontend/src/pages/
+
+------------------------------------------------------------------------------
+1. Auth.tsx (Lines: 306)
+------------------------------------------------------------------------------
+   PURPOSE: Handles user registration and login
+   
+   KEY FUNCTIONS:
+   - handleChange(e) -> Handles form input changes
+   - handleSubmit(e) -> Validates and submits login/register form
+   
+   WHAT IT DOES:
+   - Displays login/signup form with tabs
+   - Validates email and password
+   - Shows password strength indicator during registration
+   - Stores user data in localStorage on successful login
+   - Redirects to /dashboard (user) or /admin (admin) based on role
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (registerUser, loginUser)
+   - API: POST /api/auth/user/register, POST /api/auth/user/login
+
+------------------------------------------------------------------------------
+2. Dashboard.tsx (Lines: 579)
+------------------------------------------------------------------------------
+   PURPOSE: Main user dashboard showing learning progress and level categories
+   
+   KEY FUNCTIONS:
+   - fetchData() -> Fetches user data, phrases, and practice history
+   - updateCategories(phrases) -> Calculates progress for each level
+   - handleLogout() -> Logs out user and clears session
+   
+   WHAT IT DOES:
+   - Displays welcome message with user's streak
+   - Shows 3 learning levels: Beginner, Intermediate, Expert
+   - Each level shows total phrases and completed count
+   - Level access is controlled based on user's languageLevel
+   - Provides navigation to practice, progress, and profile pages
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (getLoggedInUser)
+   - backend/src/controllers/phrase.controller.js (getPhrasesByLevel)
+   - backend/src/controllers/practiceHistory.controller.js (getUserPracticeHistory)
+
+------------------------------------------------------------------------------
+3. Practice.tsx (Lines: 635)
+------------------------------------------------------------------------------
+   PURPOSE: Core practice page where users record and analyze pronunciation
+   
+   KEY FUNCTIONS:
+   - fetchPhrase() -> Gets phrase details for practice
+   - handlePlayback() -> Plays native audio or Text-to-Speech
+   - playTextToSpeech(text, language) -> Speaks text using browser TTS
+   - startRecording() -> Starts microphone recording with speech recognition
+   - stopRecording() -> Stops recording
+   - handleSubmitRecording() -> Analyzes recording and saves results
+   - playRecordedAudio() -> Plays back user's recording
+   
+   WHAT IT DOES:
+   - Displays phrase text, meaning, and example
+   - Plays native pronunciation audio
+   - Records user's voice using MediaRecorder API
+   - Uses Web Speech API for real-time speech-to-text
+   - Analyzes pronunciation accuracy, fluency, and score
+   - Shows word-by-word analysis with feedback
+   - Saves practice results to database
+   
+   CONNECTED TO:
+   - backend/src/controllers/phrase.controller.js (getPhraseById)
+   - backend/src/controllers/practiceHistory.controller.js (savePracticeResult)
+   - frontend/src/lib/speechRecognition.ts (Web Speech API wrapper)
+
+------------------------------------------------------------------------------
+4. Feedback.tsx (Lines: 461)
+------------------------------------------------------------------------------
+   PURPOSE: Shows detailed feedback after speech practice
+   
+   KEY FUNCTIONS:
+   - fetchPhrase() -> Gets phrase and previous practice data
+   - getScoreColor(score) -> Returns color based on score
+   - getScoreMessage(score) -> Returns encouraging message
+   - getComponentIcon(component) -> Returns icon for each score type
+   
+   WHAT IT DOES:
+   - Displays overall score with animated progress circle
+   - Shows breakdown: Accuracy, Fluency, Pronunciation
+   - Provides word-by-word analysis with individual scores
+   - Gives tips for improvement
+   - Offers navigation to try again or next phrase
+
+------------------------------------------------------------------------------
+5. ProgressPage.tsx (Lines: 656)
+------------------------------------------------------------------------------
+   PURPOSE: Shows comprehensive user progress and statistics
+   
+   KEY FUNCTIONS:
+   - fetchProgressData() -> Gets user statistics and practice history
+   - handleLogout() -> Logs out user
+   - getBadgeStyle(level) -> Returns badge styling
+   - getScoreColor(score) -> Returns score color
+   - formatDate(dateString) -> Formats dates for display
+   - getAchievementStyle(rarity, earned) -> Styles achievements
+   
+   WHAT IT DOES:
+   - Shows total practices, average score, streak
+   - Displays progress by difficulty level
+   - Shows practice history with timestamps
+   - Displays earned and locked achievements/badges
+   - Provides visual charts for progress tracking
+   
+   CONNECTED TO:
+   - backend/src/controllers/practiceHistory.controller.js (getUserStatistics, getUserPracticeHistory)
+
+------------------------------------------------------------------------------
+6. UserProfile.tsx (Lines: 321)
+------------------------------------------------------------------------------
+   PURPOSE: User profile management and settings
+   
+   KEY FUNCTIONS:
+   - fetchUserData() -> Loads current user profile
+   - handleSaveProfile() -> Updates name, phone, language level
+   - handleSavePassword() -> Changes user password
+   
+   WHAT IT DOES:
+   - Displays user information (name, email, phone)
+   - Shows streak count and badges
+   - Allows editing profile details
+   - Provides password change functionality
+   - Allows selecting language level preference
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (getLoggedInUser, updateProfile, updatePassword)
+
+------------------------------------------------------------------------------
+7. LevelPhrases.tsx (Lines: 277)
+------------------------------------------------------------------------------
+   PURPOSE: Lists all phrases for a specific difficulty level
+   
+   KEY FUNCTIONS:
+   - fetchPhrases() -> Gets phrases for the selected level
+   - playAudio(phrase) -> Plays phrase pronunciation
+   
+   WHAT IT DOES:
+   - Displays list of phrases for Beginner/Intermediate/Expert
+   - Shows phrase text, meaning, example
+   - Marks practiced phrases with checkmarks
+   - Provides play button for audio preview
+   - Links to practice page for each phrase
+   
+   CONNECTED TO:
+   - backend/src/controllers/phrase.controller.js (getPhrasesByLevel)
+
+------------------------------------------------------------------------------
+8. ForgotPassword.tsx (Lines: 158)
+------------------------------------------------------------------------------
+   PURPOSE: Password reset request page
+   
+   KEY FUNCTIONS:
+   - handlePasswordReset(e) -> Validates and submits password reset
+   
+   WHAT IT DOES:
+   - Collects email and new password
+   - Validates password strength
+   - Confirms password match
+   - Sends reset request to backend
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (requestPasswordReset)
+
+------------------------------------------------------------------------------
+9. ResetPassword.tsx (Lines: 152)
+------------------------------------------------------------------------------
+   PURPOSE: Password reset with token (from email link)
+   
+   KEY FUNCTIONS:
+   - handleSubmit(e) -> Resets password using token
+   
+   WHAT IT DOES:
+   - Gets reset token from URL
+   - Validates new password
+   - Submits password reset
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (resetPassword)
+
+------------------------------------------------------------------------------
+10. NotFound.tsx (Lines: ~40)
+------------------------------------------------------------------------------
+   PURPOSE: 404 error page for invalid routes
+   
+   WHAT IT DOES:
+   - Shows friendly "Page Not Found" message
+   - Provides link back to home
+
+================================================================================
+                      FRONTEND - ADMIN PAGES
+================================================================================
+
+Location: frontend/src/pages/admin/
+
+------------------------------------------------------------------------------
+1. AdminDashboard.tsx (Lines: 343)
+------------------------------------------------------------------------------
+   PURPOSE: Admin overview with system statistics
+   
+   KEY FUNCTIONS:
+   - fetchDashboardData() -> Gets all admin statistics
+   - handleRefresh() -> Refreshes dashboard data
+   
+   WHAT IT DOES:
+   - Shows total users, active users, admins count
+   - Displays total phrases by level
+   - Shows practice statistics and average scores
+   - Includes charts for visual data representation
+   
+   CONNECTED TO:
+   - backend/src/controllers/admin.controller.js (getSystemStatistics)
+   - API: GET /api/admin/dashboard
+
+------------------------------------------------------------------------------
+2. AdminUsers.tsx (Lines: 384)
+------------------------------------------------------------------------------
+   PURPOSE: User management for administrators
+   
+   KEY FUNCTIONS:
+   - fetchUsers() -> Gets paginated user list
+   - handleSearch(value) -> Filters users by search term
+   - handleDeleteUser(userId, userName) -> Deletes a user
+   - handleExportUsers() -> Exports user data to Excel
+   
+   WHAT IT DOES:
+   - Lists all registered users in table format
+   - Shows user name, email, role, streak, join date
+   - Provides search functionality
+   - Allows viewing user details
+   - Supports user deletion
+   - Exports user list to Excel
+   
+   CONNECTED TO:
+   - backend/src/controllers/admin.controller.js (getAllUsers, deleteUser)
+
+------------------------------------------------------------------------------
+3. AdminUserDetails.tsx (Lines: ~450)
+------------------------------------------------------------------------------
+   PURPOSE: Detailed view of individual user
+   
+   WHAT IT DOES:
+   - Shows complete user profile
+   - Displays user's practice history
+   - Shows statistics: total practices, avg score, etc.
+   - Allows admin to update user's role or password
+   
+   CONNECTED TO:
+   - backend/src/controllers/admin.controller.js (getUserDetails, updateUser, updateUserPassword)
+
+------------------------------------------------------------------------------
+4. AdminPhrases.tsx (Lines: 487)
+------------------------------------------------------------------------------
+   PURPOSE: Phrase content management
+   
+   KEY FUNCTIONS:
+   - fetchPhrases() -> Gets all phrases
+   - handleAddPhrase() -> Creates new phrase
+   - handleEditPhrase() -> Updates existing phrase
+   - handleDeletePhrase(phraseId) -> Removes phrase
+   - handleExportPhrases() -> Exports to Excel
+   
+   WHAT IT DOES:
+   - Lists all phrases with text, level, language
+   - Add/Edit/Delete phrase functionality
+   - Form with text, meaning, example, level fields
+   - Supports audio URL configuration
+   - Export phrases to Excel
+   
+   CONNECTED TO:
+   - backend/src/controllers/phrase.controller.js (getAllPhrases, addPhrase, updatePhrase, deletePhrase)
+
+------------------------------------------------------------------------------
+5. AdminReports.tsx (Lines: 272)
+------------------------------------------------------------------------------
+   PURPOSE: Generate and export reports
+   
+   KEY FUNCTIONS:
+   - fetchStatistics() -> Gets system statistics
+   - handleExportUserActivity() -> Exports user activity report
+   - handleExportPerformance() -> Exports performance report
+   - handleExportLearningProgress() -> Exports progress report
+   
+   WHAT IT DOES:
+   - Shows summary statistics
+   - Exports various reports to Excel/CSV
+   - Provides date-filtered reports
+   
+   CONNECTED TO:
+   - backend/src/controllers/admin.controller.js (getSystemStatistics)
+
+------------------------------------------------------------------------------
+6. AdminSettings.tsx (Lines: 296)
+------------------------------------------------------------------------------
+   PURPOSE: Admin profile and system settings
+   
+   KEY FUNCTIONS:
+   - fetchAdminData() -> Gets admin profile
+   - handleSaveProfile() -> Updates admin profile
+   - handleSavePassword() -> Changes admin password
+   - handleSaveConfiguration() -> Saves system settings
+   
+   WHAT IT DOES:
+   - Manages admin's own profile
+   - Password change functionality
+   - System configuration options
+   
+   CONNECTED TO:
+   - backend/src/controllers/auth.controller.js (getLoggedInUser, updateProfile, updatePassword)
+
+================================================================================
+                      FRONTEND - COMPONENTS
+================================================================================
+
+Location: frontend/src/components/
+
+------------------------------------------------------------------------------
+LandingPage.tsx (Lines: 132)
+------------------------------------------------------------------------------
+   PURPOSE: Public homepage for non-logged-in users
+   
+   WHAT IT DOES:
+   - Shows hero section with tagline
+   - Displays "How it Works" section
+   - Shows features of the application
+   - Call-to-action buttons for signup
+
+------------------------------------------------------------------------------
+Navbar.tsx (Lines: ~70)
+------------------------------------------------------------------------------
+   PURPOSE: Navigation bar for public pages
+   
+   WHAT IT DOES:
+   - Shows SpeakWise logo
+   - Navigation links: Features, How it Works
+   - Login/Signup buttons
+
+------------------------------------------------------------------------------
+DashboardNavbar.tsx (Lines: ~70)
+------------------------------------------------------------------------------
+   PURPOSE: Navigation for logged-in users
+   
+   WHAT IT DOES:
+   - Shows user name
+   - Navigation: Dashboard, Progress, Profile
+   - Logout button
+
+------------------------------------------------------------------------------
+ProtectedRoute.tsx (Lines: 59)
+------------------------------------------------------------------------------
+   PURPOSE: Route protection and role-based access
+   
+   WHAT IT DOES:
+   - Checks if user is logged in (from localStorage)
+   - Redirects to /login if not authenticated
+   - Checks admin role for admin routes
+   - Redirects learners away from admin pages
+   - Redirects admins away from user pages
+
+------------------------------------------------------------------------------
+Features.tsx (Lines: ~80)
+------------------------------------------------------------------------------
+   PURPOSE: Features section for landing page
+   
+   WHAT IT DOES:
+   - Lists app features with icons
+   - Shows benefits of using SpeakWise
+
+------------------------------------------------------------------------------
+Works.tsx (Lines: ~80)
+------------------------------------------------------------------------------
+   PURPOSE: "How It Works" section
+   
+   WHAT IT DOES:
+   - Step 1: Listen to native pronunciation
+   - Step 2: Record your voice
+   - Step 3: Get instant feedback
+
+------------------------------------------------------------------------------
+Footer.tsx (Lines: ~30)
+------------------------------------------------------------------------------
+   PURPOSE: Page footer with copyright
+
+------------------------------------------------------------------------------
+admin/AdminLayout.tsx
+------------------------------------------------------------------------------
+   PURPOSE: Layout wrapper for admin pages
+   
+   WHAT IT DOES:
+   - Sidebar navigation for admin
+   - Links: Dashboard, Users, Phrases, Reports, Settings
+
+================================================================================
+                      FRONTEND - LIBRARY FILES
+================================================================================
+
+Location: frontend/src/lib/
+
+------------------------------------------------------------------------------
+api.ts (Lines: 211)
+------------------------------------------------------------------------------
+   PURPOSE: Axios API client and API function definitions
+   
+   EXPORTS:
+   - api: Axios instance with base URL and credentials
+   
+   - authAPI:
+     * register(data) -> POST /api/auth/user/register
+     * login(data) -> POST /api/auth/user/login
+     * logout() -> GET /api/auth/user/logout
+     * getMe() -> GET /api/auth/me
+     * updateProfile(data) -> PUT /api/auth/profile
+     * updatePassword(data) -> PUT /api/auth/password
+     * requestPasswordReset(email, password) -> POST /api/auth/forgot-password
+   
+   - phraseAPI:
+     * getPhrasesByLevel(level) -> GET /api/phrase/level/:level
+     * getPhraseById(id) -> GET /api/phrase/:id
+     * markAsPracticed(id) -> POST /api/phrase/practice/:id
+     * getUserProgress() -> GET /api/phrase/user/progress
+     * addPhrase(data) -> POST /api/phrase/add (Admin)
+     * getAllPhrases() -> GET /api/phrase/all (Admin)
+     * updatePhrase(id, data) -> PUT /api/phrase/:id (Admin)
+     * deletePhrase(id) -> DELETE /api/phrase/:id (Admin)
+   
+   - practiceHistoryAPI:
+     * savePracticeResult(phraseId, data) -> POST /api/practice-history/practice/:phraseId
+     * getPracticeHistory(params) -> GET /api/practice-history/history
+     * getUserStatistics() -> GET /api/practice-history/statistics
+     * getPhrasePracticeHistory(phraseId) -> GET /api/practice-history/phrase/:phraseId
+   
+   - adminUserAPI:
+     * getAllUsers(params) -> GET /api/admin/users
+     * getUserDetails(userId) -> GET /api/admin/users/:userId
+     * updateUser(userId, data) -> PUT /api/admin/users/:userId
+     * updateUserPassword(userId, password) -> PUT /api/admin/users/:userId/password
+     * deleteUser(userId) -> DELETE /api/admin/users/:userId
+     * getDashboardStats() -> GET /api/admin/dashboard
+
+------------------------------------------------------------------------------
+speechRecognition.ts (Lines: 354)
+------------------------------------------------------------------------------
+   PURPOSE: Web Speech API wrapper for pronunciation analysis
+   
+   KEY FUNCTIONS:
+   - initializeSpeechRecognition(language, onResult, onEnd, onError)
+     * Creates SpeechRecognition instance
+     * Configures for continuous listening
+     * Handles interim and final results
+     * Supports 'en-US' and 'ja-JP' languages
+   
+   - analyzeRecording(spokenText, expectedText, duration)
+     * Compares spoken text with expected phrase
+     * Calculates overall score (0-100%)
+     * Calculates accuracy, fluency, pronunciation scores
+     * Returns word-by-word analysis
+   
+   - levenshteinDistance(str1, str2)
+     * Algorithm for measuring text similarity
+   
+   - calculateSimilarity(spoken, expected)
+     * Returns percentage similarity
+   
+   - analyzeWords(spokenText, expectedText)
+     * Word-by-word comparison with individual scores
+   
+   HOW SPEECH RECOGNITION WORKS:
+   1. User clicks record button
+   2. Browser requests microphone permission
+   3. SpeechRecognition starts listening
+   4. Audio is converted to text in real-time
+   5. Final transcript is compared with target phrase
+   6. Score is calculated using text similarity algorithms
+
+------------------------------------------------------------------------------
+levelAccessControl.ts (Lines: 39)
+------------------------------------------------------------------------------
+   PURPOSE: Controls access to difficulty levels based on user's level
+   
+   KEY FUNCTIONS:
+   - isLevelAccessible(requestedLevel, userLevel)
+     * Returns true if user can access the level
+     * Beginners: only beginner
+     * Intermediate: beginner + intermediate
+     * Expert: all levels
+   
+   - getAccessibleLevels(userLevel)
+     * Returns array of accessible levels
+   
+   - getLockedLevelMessage(level, userLevel)
+     * Returns message explaining how to unlock level
+
+------------------------------------------------------------------------------
+passwordValidation.ts (Lines: ~100)
+------------------------------------------------------------------------------
+   PURPOSE: Password strength validation
+   
+   WHAT IT CHECKS:
+   - Minimum 8 characters
+   - At least one uppercase letter
+   - At least one lowercase letter
+   - At least one number
+   - At least one special character
+
+------------------------------------------------------------------------------
+exportUtils.ts (Lines: ~50)
+------------------------------------------------------------------------------
+   PURPOSE: Excel/CSV export utilities for admin reports
+   
+   KEY FUNCTIONS:
+   - exportToExcel(data, filename)
+   - exportToCSV(data, filename)
+   - formatDateForExport(date)
+
+------------------------------------------------------------------------------
+utils.ts (Lines: ~10)
+------------------------------------------------------------------------------
+   PURPOSE: General utilities
+   - cn() -> Classname merge utility (Tailwind)
+
+================================================================================
+                          FRONTEND - ROUTES
+================================================================================
+
+Location: frontend/src/routes/AppRoutes.tsx (Lines: 191)
+
+PURPOSE: Defines all application routes and their protection rules
+
+PUBLIC ROUTES (No login required):
+- /                -> LandingPage (with Navbar & Footer)
+- /auth            -> Auth (Login/Register)
+- /login           -> Auth
+- /signup          -> Auth
+- /forgot-password -> ForgotPassword
+- /reset-password/:token -> ResetPassword
+
+PROTECTED USER ROUTES (Login required, non-admin):
+- /dashboard       -> Dashboard
+- /level/:level    -> LevelPhrases
+- /practice        -> Practice
+- /practice/:phraseId -> Practice (specific phrase)
+- /feedback        -> Feedback
+- /feedback/:phraseId -> Feedback (specific phrase)
+- /progress        -> ProgressPage
+- /profile         -> UserProfile
+
+PROTECTED ADMIN ROUTES (Admin login required):
+- /admin           -> AdminDashboard
+- /admin/users     -> AdminUsers
+- /admin/users/:id -> AdminUserDetails
+- /admin/phrases   -> AdminPhrases
+- /admin/reports   -> AdminReports
+- /admin/settings  -> AdminSettings
+
+CATCH-ALL:
+- *               -> NotFound (404 page)
+
+================================================================================
+                         BACKEND - CONTROLLERS
+================================================================================
+
+Location: backend/src/controllers/
+
+------------------------------------------------------------------------------
+auth.controller.js (Lines: 396)
+------------------------------------------------------------------------------
+   PURPOSE: Handles all authentication operations
+
+   FUNCTIONS:
+   
+   1. registerUser(req, res)
+      - Validates required fields (fullName, email, password)
+      - Checks if email already exists
+      - Hashes password using bcrypt
+      - Creates new user in database
+      - Returns success message
+      
+   2. loginUser(req, res)
+      - Validates email and password
+      - Checks if user exists
+      - Compares password hash
+      - Creates JWT token (valid 7 days)
+      - Sets token in HTTP-only cookie
+      - Updates lastLogin timestamp
+      - Returns user data (without password)
+      
+   3. logoutUser(req, res)
+      - Clears token cookie
+      - Returns success message
+      
+   4. getLoggedInUser(req, res)
+      - Uses authUser middleware to verify token
+      - Returns current user data from req.user
+      
+   5. updateProfile(req, res)
+      - Updates fullName, phone, languageLevel
+      - Returns updated user data
+      
+   6. updatePassword(req, res)
+      - Verifies current password
+      - Hashes new password
+      - Updates in database
+      
+   7. requestPasswordReset(req, res)
+      - Finds user by email
+      - Updates password directly (direct reset)
+      
+   8. resetPassword(req, res)
+      - Verifies reset token
+      - Checks token expiration
+      - Updates password with new hash
+
+------------------------------------------------------------------------------
+phrase.controller.js (Lines: 303)
+------------------------------------------------------------------------------
+   PURPOSE: Manages phrase content
+
+   ADMIN FUNCTIONS:
+   
+   1. addPhrase(req, res)
+      - Creates new phrase with text, meaning, example
+      - Sets level (beginner/intermediate/expert)
+      - Stores audio URLs if provided
+      
+   2. getAllPhrases(req, res)
+      - Returns all phrases (sorted by newest)
+      - Includes creator info (populated)
+      
+   3. updatePhrase(req, res)
+      - Updates phrase by ID
+      - Validates level if provided
+      
+   4. deletePhrase(req, res)
+      - Removes phrase from database
+      - Returns deleted phrase data
+
+   USER FUNCTIONS:
+   
+   5. getPhrasesByLevel(req, res)
+      - Gets phrases for specific level
+      - Validates level parameter
+      
+   6. getPhraseById(req, res)
+      - Returns single phrase details
+      
+   7. markPhraseAsPracticed(req, res)
+      - Marks phrase as practiced
+      - (Actual tracking via PracticeHistory)
+      
+   8. getPracticedPhrases(req, res)
+      - Returns user's practiced phrases
+      
+   9. getUserProgress(req, res)
+      - Returns total phrases count by level
+
+------------------------------------------------------------------------------
+practiceHistory.controller.js (Lines: 282)
+------------------------------------------------------------------------------
+   PURPOSE: Tracks practice sessions and calculates statistics
+
+   FUNCTIONS:
+   
+   1. savePracticeResult(req, res)
+      - Creates practice history record
+      - Stores: score, accuracy, fluency, pronunciation
+      - Stores: word analysis array, duration
+      - Increments attempt number for repeat practices
+      - Updates user's streak
+      
+   2. getUserPracticeHistory(req, res)
+      - Returns paginated practice history
+      - Includes phrase details (populated)
+      - Sorted by most recent
+      
+   3. getUserStatistics(req, res)
+      - Calculates: totalPractices, uniquePhrases
+      - Calculates: averageScore (all components)
+      - Calculates: bestScore, recentPractices (7 days)
+      - Calculates: practicesByLevel (aggregation)
+      
+   4. getPhrasePracticeHistory(req, res)
+      - Returns all practices for specific phrase
+      - Includes total attempts and best score
+      
+   5. updateUserStreak(userId) [HELPER]
+      - Checks if practiced today/yesterday
+      - Increments streak for consecutive days
+      - Resets streak if gap > 1 day
+
+------------------------------------------------------------------------------
+admin.controller.js (Lines: 403)
+------------------------------------------------------------------------------
+   PURPOSE: Admin-only user and system management
+
+   FUNCTIONS:
+   
+   1. getAllUsers(req, res)
+      - Returns paginated user list
+      - Supports search by name/email
+      - Includes practice statistics per user
+      
+   2. getUserDetails(req, res)
+      - Returns complete user profile
+      - Includes practice history
+      - Includes detailed statistics
+      
+   3. updateUser(req, res)
+      - Updates user profile (admin access)
+      - Can change role, name, etc.
+      
+   4. updateUserPassword(req, res)
+      - Admin can reset any user's password
+      - Hashes new password
+      
+   5. deleteUser(req, res)
+      - Removes user from database
+      - Cascades to delete practice history
+      
+   6. getSystemStatistics(req, res)
+      - Returns: total users, active today
+      - Returns: total phrases by level
+      - Returns: practice statistics
+      - Returns: average scores across system
+
+================================================================================
+                         BACKEND - MODELS
+================================================================================
+
+Location: backend/src/models/
+
+------------------------------------------------------------------------------
+user.model.js (Lines: 79)
+------------------------------------------------------------------------------
+   PURPOSE: MongoDB schema for users
+
+   FIELDS:
+   - fullName (String, required)
+   - email (String, required, unique)
+   - password (String, required) - hashed
+   - role (String: "learner" or "admin", default: "learner")
+   - streak (Number, default: 0)
+   - lastLogin (Date)
+   - phone (String)
+   - badges (Array of Strings)
+     * Possible: "Word Whisperer", "Sound Scout", "Voice Voyager",
+       "Fluency Fighter", "Accent Ace", "SpeakWise Legend"
+   - languageLevel (String: "beginner"/"intermediate"/"expert")
+   - practicedPhrases (Array of ObjectId -> Phrase)
+   - resetPasswordToken (String)
+   - resetPasswordExpires (Date)
+   - created_at (Date, default: now)
+
+------------------------------------------------------------------------------
+phrase.model.js (Lines: 48)
+------------------------------------------------------------------------------
+   PURPOSE: MongoDB schema for phrases
+
+   FIELDS:
+   - text (String, required) - The phrase to practice
+   - meaning (String) - Meaning/translation
+   - example (String) - Example sentence
+   - language (String, default: "English")
+   - level (String: "beginner"/"intermediate"/"expert", required)
+   - audioUrl (String) - URL for native pronunciation audio
+   - audioMeaningUrl (String) - URL for meaning audio
+   - createdBy (ObjectId -> User) - Admin who created
+   - timestamps (createdAt, updatedAt - automatic)
+
+------------------------------------------------------------------------------
+practiceHistory.model.js (Lines: 72)
+------------------------------------------------------------------------------
+   PURPOSE: MongoDB schema for practice sessions
+
+   FIELDS:
+   - user (ObjectId -> User, required)
+   - phrase (ObjectId -> Phrase, required)
+   - score (Number, 0-100, required) - Overall score
+   - accuracy (Number, 0-100) - Word accuracy
+   - fluency (Number, 0-100) - Speaking fluency
+   - pronunciation (Number, 0-100) - Pronunciation quality
+   - wordAnalysis (Array of Objects):
+     * word (String)
+     * score (Number)
+     * feedback (String)
+     * timestamp (Number)
+   - audioUrl (String) - Recorded audio URL
+   - attemptNumber (Number, default: 1)
+   - duration (Number) - Recording duration in seconds
+   - status (String: "completed"/"in-progress"/"skipped")
+   - timestamps (automatic)
+
+   INDEXES:
+   - { user: 1, phrase: 1 } - For finding specific user's attempts
+   - { user: 1, createdAt: -1 } - For recent practices query
+
+================================================================================
+                         BACKEND - ROUTES
+================================================================================
+
+Location: backend/src/routes/
+
+------------------------------------------------------------------------------
+auth.routes.js (Lines: 25)
+------------------------------------------------------------------------------
+   PURPOSE: Authentication API endpoints
+
+   PUBLIC ROUTES:
+   - POST /api/auth/user/register -> registerUser
+   - POST /api/auth/user/login -> loginUser
+   - GET /api/auth/user/logout -> logoutUser
+   - POST /api/auth/forgot-password -> requestPasswordReset
+   - POST /api/auth/reset-password/:token -> resetPassword
+
+   PROTECTED ROUTES (require authUser middleware):
+   - GET /api/auth/me -> getLoggedInUser
+   - PUT /api/auth/profile -> updateProfile
+   - PUT /api/auth/password -> updatePassword
+
+------------------------------------------------------------------------------
+phrase.routes.js (Lines: 22)
+------------------------------------------------------------------------------
+   PURPOSE: Phrase management API endpoints
+
+   ADMIN ROUTES (require authAdmin middleware):
+   - POST /api/phrase/add -> addPhrase
+   - GET /api/phrase/all -> getAllPhrases
+   - PUT /api/phrase/:id -> updatePhrase
+   - DELETE /api/phrase/:id -> deletePhrase
+
+   USER ROUTES (require authUser middleware):
+   - GET /api/phrase/level/:level -> getPhrasesByLevel
+   - GET /api/phrase/user/practiced -> getPracticedPhrases
+   - GET /api/phrase/user/progress -> getUserProgress
+   - POST /api/phrase/practice/:id -> markPhraseAsPracticed
+   - GET /api/phrase/:id -> getPhraseById
+
+------------------------------------------------------------------------------
+practiceHistory.routes.js (Lines: 56)
+------------------------------------------------------------------------------
+   PURPOSE: Practice history API endpoints
+
+   ALL ROUTES (require authUser middleware):
+   - POST /api/practice-history/save -> savePracticeResult
+   - POST /api/practice-history/practice/:phraseId -> savePracticeResult
+   - GET /api/practice-history/user -> getUserPracticeHistory
+   - GET /api/practice-history/history -> getUserPracticeHistory
+   - GET /api/practice-history/stats -> getUserStatistics
+   - GET /api/practice-history/statistics -> getUserStatistics
+   - GET /api/practice-history/phrase/:phraseId -> getPhrasePracticeHistory
+
+------------------------------------------------------------------------------
+admin.routes.js (Lines: 18)
+------------------------------------------------------------------------------
+   PURPOSE: Admin-only management endpoints
+
+   ALL ROUTES (require authAdmin middleware):
+   - GET /api/admin/users -> getAllUsers
+   - GET /api/admin/users/:userId -> getUserDetails
+   - PUT /api/admin/users/:userId -> updateUser
+   - PUT /api/admin/users/:userId/password -> updateUserPassword
+   - DELETE /api/admin/users/:userId -> deleteUser
+   - GET /api/admin/statistics -> getSystemStatistics
+   - GET /api/admin/dashboard -> getSystemStatistics
+
+================================================================================
+                        BACKEND - MIDDLEWARES
+================================================================================
+
+Location: backend/src/middlewares/
+
+------------------------------------------------------------------------------
+auth.middleware.js (Lines: 55)
+------------------------------------------------------------------------------
+   PURPOSE: JWT authentication and authorization
+
+   FUNCTIONS:
+   
+   1. authUser(req, res, next)
+      - Extracts JWT token from cookies
+      - Verifies token using JWT_SECRET
+      - Finds user by decoded ID
+      - Attaches user to req.user
+      - Returns 401 if unauthorized
+      
+   2. authAdmin(req, res, next)
+      - Same as authUser BUT
+      - Also checks if user.role === "admin"
+      - Returns 403 if not admin
+
+------------------------------------------------------------------------------
+validation.middleware.js (Lines: ~80)
+------------------------------------------------------------------------------
+   PURPOSE: Input validation using express-validator
+
+   EXPORTS:
+   - registerValidation: Validates register form
+   - loginValidation: Validates login form
+   - updatePasswordValidation: Validates password change
+   - handleValidationErrors: Returns validation errors
+
+================================================================================
+                         BACKEND - APP SETUP
+================================================================================
+
+Location: backend/src/app.js (Lines: 62)
+
+PURPOSE: Express application configuration
+
+CONFIGURATION:
+1. Trust Proxy - For Railway deployment
+2. Helmet - Security headers
+3. Compression - Response compression
+4. Rate Limiting - 100 requests per 15 minutes
+5. CORS - Allows requests from:
+   - localhost:5173, 5174, 5000
+   - speakwiseai.vercel.app
+   - Includes credentials (cookies)
+
+ROUTES MOUNTED:
+- /api/auth -> authRoutes
+- /api/admin -> adminRoutes
+- /api/phrase -> phraseRoutes
+- /api/practice-history -> practiceHistoryRoutes
+- /health -> healthRoutes (no rate limit)
+
+================================================================================
+                        HOW THE APP WORKS - FLOW
+================================================================================
+
+1. USER REGISTRATION:
+   Frontend: Auth.tsx (handleSubmit) 
+   -> API: authAPI.register() 
+   -> Backend: POST /api/auth/user/register 
+   -> Controller: auth.controller.js (registerUser)
+   -> Model: user.model.js (create new user)
+   -> Response: Success or Error
+
+2. USER LOGIN:
+   Frontend: Auth.tsx (handleSubmit)
+   -> API: authAPI.login()
+   -> Backend: POST /api/auth/user/login
+   -> Controller: auth.controller.js (loginUser)
+   -> JWT Token created and set in cookie
+   -> User data stored in localStorage
+   -> Redirect to Dashboard or Admin
+
+3. SPEECH PRACTICE FLOW:
+   a) User navigates to Practice page
+   b) Practice.tsx fetches phrase (getPhraseById)
+   c) User clicks "Play" to hear native pronunciation
+   d) User clicks "Record" to start recording
+   e) Web Speech API converts speech to text in real-time
+   f) User clicks "Stop" and "Submit"
+   g) speechRecognition.ts analyzes the recording:
+      - Compares spoken text with expected phrase
+      - Calculates similarity scores
+      - Generates word-by-word analysis
+   h) Results sent to backend (savePracticeResult)
+   i) User redirected to Feedback page
+
+4. LEVEL ACCESS CONTROL:
+   - User's languageLevel determines access
+   - levelAccessControl.ts checks permissions
+   - Dashboard shows locked levels as disabled
+   - Admin can change user's level in AdminUserDetails
+
+5. ADMIN OPERATIONS:
+   - ProtectedRoute checks for admin role
+   - authAdmin middleware protects backend routes
+   - Admin can: manage users, manage phrases, view reports
+
+================================================================================
+                        IMPORTANT QUESTIONS & ANSWERS
+================================================================================
+
+Q: Where is user authentication handled?
+A: auth.controller.js creates JWT token, auth.middleware.js verifies it
+
+Q: How is the speech recognition working?
+A: speechRecognition.ts uses browser's Web Speech API (free, built-in)
+
+Q: Where are scores calculated?
+A: speechRecognition.ts (analyzeRecording function) uses text similarity
+
+Q: How are users restricted by level?
+A: levelAccessControl.ts + Dashboard.tsx + ProtectedRoute.tsx
+
+Q: Where is the database connection?
+A: backend/src/db/db.js contains MongoDB connection using Mongoose
+
+Q: How are passwords secured?
+A: bcryptjs hashes passwords before storage (bcrypt.hash, bcrypt.compare)
+
+Q: Where are API endpoints defined?
+A: frontend/src/lib/api.ts (client), backend/src/routes/*.js (server)
+
+Q: How does the streak work?
+A: practiceHistory.controller.js (updateUserStreak) checks consecutive days
+
+Q: Where is admin access enforced?
+A: authAdmin middleware checks user.role === "admin"
+
+Q: How is user session maintained?
+A: JWT token in HTTP-only cookie (server) + user data in localStorage (client)
+
+================================================================================
+                              END OF DOCUMENTATION
+================================================================================

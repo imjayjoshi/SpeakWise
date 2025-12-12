@@ -4,7 +4,6 @@ const User = require("../models/user.model");
 
 async function savePracticeResult(req, res) {
   try {
-    // Support phraseId from both URL params (/practice/:phraseId) and body (/save)
     const phraseId = req.params.phraseId || req.body.phraseId;
     
     const {
@@ -17,18 +16,15 @@ async function savePracticeResult(req, res) {
       duration,
     } = req.body;
 
-    // Validate phraseId
     if (!phraseId) {
       return res.status(400).json({ success: false, message: "Phrase ID is required" });
     }
 
-    // Validate phrase exists
     const phrase = await Phrase.findById(phraseId);
     if (!phrase) {
       return res.status(404).json({ success: false, message: "Phrase not found" });
     }
 
-    // Check if user alreadt practiced this phrase
     const existingPractice = await PracticeHistory.findOne({
       user: req.user._id,
       phrase: phraseId,
@@ -38,7 +34,6 @@ async function savePracticeResult(req, res) {
       ? existingPractice.attemptNumber + 1
       : 1;
 
-    // Create new practice history
     const practiceHistory = new PracticeHistory({
       user: req.user._id,
       phrase: phraseId,
@@ -107,17 +102,14 @@ async function getUserStatistics(req, res) {
   try {
     const userId = req.user._id;
 
-    // Total practice
     const totalPractices = await PracticeHistory.countDocuments({
       user: userId,
     });
 
-    // Unique phrase practiced
     const uniquePhrases = await PracticeHistory.distinct("phrase", {
       user: userId,
     });
 
-    // Avarage Score
     const avgResult = await PracticeHistory.aggregate([
       { $match: { user: userId } },
       {
@@ -138,12 +130,10 @@ async function getUserStatistics(req, res) {
       avgPronunciation: 0,
     };
 
-    // Best Score
     const bestScore = await PracticeHistory.findOne({ user: userId })
       .sort({ score: -1 })
       .limit(1);
 
-    // Recent practices (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -152,7 +142,6 @@ async function getUserStatistics(req, res) {
       createdAt: { $gte: sevenDaysAgo },
     });
 
-    // Practices by level
     const practiceByLevel = await PracticeHistory.aggregate([
       { $match: { user: userId } },
       {
@@ -173,7 +162,6 @@ async function getUserStatistics(req, res) {
       },
     ]);
 
-    // Total available Phrases
     const totalPhrasesAvailable = await Phrase.countDocuments();
 
     res.status(200).json({

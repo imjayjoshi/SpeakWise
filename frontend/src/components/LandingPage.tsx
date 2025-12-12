@@ -119,9 +119,7 @@ const LandingPage = () => {
             </Link>
           </Button>
 
-          {/* <div className="text-white/80 text-sm">
-            Join thousands of confident speakers worldwide
-          </div> */}
+
         </div>
       </section>
     </div>

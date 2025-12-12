@@ -1,9 +1,7 @@
 const Phrase = require("../models/phrase.model");
 const User = require("../models/user.model");
 
-// ADMIN CONTROLLERS
 
-// Add new phrase (Admin only)
 async function addPhrase(req, res) {
   try {
     const {
@@ -16,12 +14,10 @@ async function addPhrase(req, res) {
       audioMeaningUrl,
     } = req.body;
 
-    // Validate required fields
     if (!text || !level) {
       return res.status(400).json({ success: false, message: "Text and level are required" });
     }
 
-    // Validate level
     if (!["beginner", "intermediate", "expert"].includes(level)) {
       return res.status(400).json({
         success: false,
@@ -53,7 +49,6 @@ async function addPhrase(req, res) {
   }
 }
 
-// Get all phrases (Admin only)
 async function getAllPhrases(req, res) {
   try {
     const phrases = await Phrase.find()
@@ -73,7 +68,6 @@ async function getAllPhrases(req, res) {
   }
 }
 
-// Update phrase (Admin only)
 async function updatePhrase(req, res) {
   try {
     const { id } = req.params;
@@ -87,7 +81,6 @@ async function updatePhrase(req, res) {
       audioMeaningUrl,
     } = req.body;
 
-    // Validate level if provided
     if (level && !["beginner", "intermediate", "expert"].includes(level)) {
       return res.status(400).json({
         success: false,
@@ -126,7 +119,6 @@ async function updatePhrase(req, res) {
   }
 }
 
-// Delete phrase
 async function deletePhrase(req, res) {
   try {
     const { id } = req.params;
@@ -150,14 +142,10 @@ async function deletePhrase(req, res) {
   }
 }
 
-// USER CONTROLLERS
-
-// Get phrases by level
 async function getPhrasesByLevel(req, res) {
   try {
     const { level } = req.params;
 
-    // Validate level
     if (!["beginner", "intermediate", "expert"].includes(level)) {
       return res.status(400).json({
         message: "Invalid level. Must be beginner, intermediate, or expert",
@@ -180,7 +168,6 @@ async function getPhrasesByLevel(req, res) {
   }
 }
 
-// Get single phrase by ID
 async function getPhraseById(req, res) {
   try {
     const { id } = req.params;
@@ -203,7 +190,6 @@ async function getPhraseById(req, res) {
   }
 }
 
-// Mark phrase as practiced
 async function markPhraseAsPracticed(req, res) {
   try {
     const { id } = req.params;
@@ -216,8 +202,6 @@ async function markPhraseAsPracticed(req, res) {
 
     const user = await User.findById(req.user._id);
 
-    // Add to user's practiced phrases
-    // For now, just return success
     res.status(200).json({
       success: true,
       message: "Phrase marked as practiced",
@@ -236,8 +220,6 @@ async function markPhraseAsPracticed(req, res) {
 // Get practiced phrases for logged-in user
 async function getPracticedPhrases(req, res) {
   try {
-    // This requires a separate PracticeHistory model or field in User model
-    // For now, return empty array
     res.status(200).json({
       success: true,
       practicedPhrases: [],
@@ -262,7 +244,6 @@ async function getUserProgress(req, res) {
     });
     const expertPhrases = await Phrase.countDocuments({ level: "expert" });
 
-    // This should be enhanced with actual user practice data
     res.status(200).json({
       success: true,
       progress: {
@@ -272,7 +253,6 @@ async function getUserProgress(req, res) {
           intermediate: intermediatePhrases,
           expert: expertPhrases,
         },
-        // Add user-specific stats when practice tracking is implemented
         practiced: 0,
         mastered: 0,
         averageScore: 0,

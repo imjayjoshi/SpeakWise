@@ -2,12 +2,10 @@ const User = require("../models/user.model");
 const PracticeHistory = require("../models/practiceHistory.model");
 const Phrase = require("../models/phrase.model");
 
-// Get all users with pagination and search
 async function getAllUsers(req, res) {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
 
-    // Build search query
     const searchQuery = search
       ? {
           $or: [
@@ -17,17 +15,14 @@ async function getAllUsers(req, res) {
         }
       : {};
 
-    // Get users
     const users = await User.find(searchQuery)
       .select("-password")
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
 
-    // Get total count
     const total = await User.countDocuments(searchQuery);
 
-    // Get user statistics for each user
     const usersWithStats = await Promise.all(
       users.map(async (user) => {
         const totalPractices = await PracticeHistory.countDocuments({
@@ -80,18 +75,15 @@ async function getAllUsers(req, res) {
   }
 }
 
-// Get user details with full statistics
 async function getUserDetails(req, res) {
   try {
     const { userId } = req.params;
 
-    // Get user
     const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Get Practice statistics
     const totalPractices = await PracticeHistory.countDocuments({
       user: userId,
     });
@@ -100,7 +92,6 @@ async function getUserDetails(req, res) {
       user: userId,
     });
 
-    // Average Score
     const avgResult = await PracticeHistory.aggregate([
       { $match: { user: user._id } },
       {
@@ -121,14 +112,12 @@ async function getUserDetails(req, res) {
       avgPronunciation: 0,
     };
 
-    // Best Score
     const bestScore = await PracticeHistory.findOne({ user: userId })
       .sort({
         score: -1,
       })
       .limit(1);
 
-    // Recent practices
     const recentPractices = await PracticeHistory.find({
       user: userId,
     })
@@ -136,7 +125,6 @@ async function getUserDetails(req, res) {
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Practice by level
     const practicesByLevel = await PracticeHistory.aggregate([
       {
         $match: { user: user._id },
@@ -159,7 +147,6 @@ async function getUserDetails(req, res) {
       },
     ]);
 
-    // Total phrases available
     const totalPhrasesAvailable = await Phrase.countDocuments();
 
     res.status(200).json({
@@ -191,7 +178,6 @@ async function getUserDetails(req, res) {
   }
 }
 
-// Update user
 async function updateUser(req, res) {
   try {
     const { userId } = req.params;
@@ -228,13 +214,11 @@ async function updateUser(req, res) {
   }
 }
 
-// Update user password (admin only)
 async function updateUserPassword(req, res) {
   try {
     const { userId } = req.params;
     const { newPassword } = req.body;
 
-    // Validate password using the same validation as registration
     const { validatePassword } = require('../utils/passwordValidator');
     const validation = validatePassword(newPassword);
 
@@ -254,7 +238,6 @@ async function updateUserPassword(req, res) {
       });
     }
 
-    // Hash new password with bcrypt
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
@@ -273,14 +256,11 @@ async function updateUserPassword(req, res) {
   }
 }
 
-// Delete User
 async function deleteUser(req, res) {
   try {
     const { userId } = req.params;
-    // Delets user's practice history first
     await PracticeHistory.deleteMany({ user: userId });
 
-    // delete user
     const user = await User.findByIdAndDelete(userId);
 
     if (!userId) {
@@ -302,15 +282,12 @@ async function deleteUser(req, res) {
   }
 }
 
-// Get system statistics
 async function getSystemStatistics(req, res) {
   try {
-    // total user
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ role: "learner" });
     const adminUsers = await User.countDocuments({ role: "admin" });
 
-    // Total Phrases
     const totalPhrases = await Phrase.countDocuments();
     const phrasesByLevel = await Phrase.aggregate([
       {
@@ -321,10 +298,8 @@ async function getSystemStatistics(req, res) {
       },
     ]);
 
-    // Total practices
     const totalPractices = await PracticeHistory.countDocuments();
 
-    // Average system score
     const avgSystemScore = await PracticeHistory.aggregate([
       {
         $group: {
@@ -334,27 +309,23 @@ async function getSystemStatistics(req, res) {
       },
     ]);
 
-    // Recent users (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentUsers = await User.countDocuments({
       createdAt: { $gte: sevenDaysAgo },
     });
 
-    // Active today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const activeToday = await PracticeHistory.distinct("user", {
       createdAt: { $gte: today },
     });
 
-    // Format phrasesByLevel for frontend
     const formattedPhrasesByLevel = phrasesByLevel.map(item => ({
       level: item._id,
       count: item.count
     }));
 
-    // Return data in format expected by frontend
     res.status(200).json({
       success: true,
       totalUsers,
@@ -364,7 +335,6 @@ async function getSystemStatistics(req, res) {
       avgPronunciationScore: Math.round(avgSystemScore[0]?.avgScore || 0),
       phrasesByLevel: formattedPhrasesByLevel,
       newUsersLast30Days: recentUsers,
-      // Also include nested format for backward compatibility
       statistics: {
         users: {
           total: totalUsers,

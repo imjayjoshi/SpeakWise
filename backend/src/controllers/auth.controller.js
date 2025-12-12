@@ -8,7 +8,6 @@ async function registerUser(req, res) {
   try {
     const { fullName, email, password } = req.body;
 
-    // Check if user already exists
     const isUserAlreadyExists = await userModel.findOne({ email });
     if (isUserAlreadyExists) {
       return res.status(400).json({ 
@@ -17,13 +16,10 @@ async function registerUser(req, res) {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Determine role
     const role = email === "admin@gmail.com" ? "admin" : "learner";
 
-    // Create user
     const user = await userModel.create({
       fullName,
       email,
@@ -33,7 +29,6 @@ async function registerUser(req, res) {
       lastLogin: new Date(),
     });
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         id: user._id,
@@ -45,7 +40,6 @@ async function registerUser(req, res) {
       }
     );
 
-    // Set cookie
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
@@ -96,17 +90,14 @@ async function loginUser(req, res) {
       });
     }
 
-    // FIXED STREAK LOGIC
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset to midnight
+    today.setHours(0, 0, 0, 0);
 
-    // Get last login and reset to midnight for comparison
     const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
     if (lastLogin) {
       lastLogin.setHours(0, 0, 0, 0);
     }
 
-    // Calculate difference in days
     const diffInMs = today - lastLogin;
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
@@ -123,7 +114,6 @@ async function loginUser(req, res) {
       user.streak = 1;
     }
 
-    // Update last login to current date
     user.lastLogin = new Date();
     await user.save();
 
