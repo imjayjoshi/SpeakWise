@@ -3,14 +3,52 @@
 ## Quick Start Deployment
 
 ### Prerequisites
+
 - Node.js 18+ installed
 - MongoDB Atlas account
 - Vercel account (for frontend)
-- Render/Railway account (for backend)
+- **Koyeb account (for backend)** - Recommended!
 
 ---
 
-## Backend Deployment (Render/Railway)
+## Backend Deployment
+
+### Option 1: Koyeb (Recommended - Always On!) ⭐
+
+Koyeb offers **always-on free tier** with no sleep/cold starts.
+
+1. Go to [Koyeb Dashboard](https://app.koyeb.com/)
+2. Click **"Create Web Service"** → Select **GitHub**
+3. Connect your SpeakWise repository
+4. Configure:
+
+   - **App name**: `speakwise-backend`
+   - **Root Directory**: `backend`
+   - **Run Command**: `npm start`
+   - **Instance Type**: Free (Eco)
+
+5. Add Environment Variables:
+
+   ```
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/speakwise
+   JWT_SECRET=your-super-secret-key-min-32-characters
+   PORT=8000
+   NODE_ENV=production
+   CORS_ORIGIN=https://your-frontend-url.vercel.app
+   ```
+
+6. Configure Health Check:
+
+   - **Port**: `8000`
+   - **Protocol**: `HTTP`
+   - **Path**: `/health`
+
+7. Click **"Deploy"**
+8. Your URL: `https://speakwise-backend-username.koyeb.app`
+
+---
+
+### Option 2: Render (Alternative)
 
 ### 1. Prepare MongoDB Atlas
 
@@ -26,6 +64,7 @@
 2. Click "New +" → "Web Service"
 3. Connect your GitHub repository
 4. Configure:
+
    - **Name**: `speakwise-backend`
    - **Root Directory**: `backend`
    - **Environment**: `Node`
@@ -34,6 +73,7 @@
    - **Instance Type**: Free
 
 5. Add Environment Variables:
+
    ```
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/speakwise
    JWT_SECRET=your-super-secret-key-min-32-characters
@@ -47,9 +87,11 @@
 8. Copy the backend URL (e.g., `https://speakwise-backend.onrender.com`)
 
 ### Health Check
+
 Visit: `https://your-backend-url.onrender.com/health`
 
 Should return:
+
 ```json
 {
   "status": "ok",
@@ -66,6 +108,7 @@ Should return:
 ### 1. Update Environment Variable
 
 1. Create `.env` file in frontend folder:
+
    ```
    VITE_API_URL=https://your-backend-url.onrender.com/api
    ```
@@ -75,11 +118,13 @@ Should return:
 ### 2. Deploy to Vercel
 
 1. Install Vercel CLI (optional):
+
    ```bash
    npm install -g vercel
    ```
 
 2. **Option A: Using Vercel Dashboard**
+
    - Go to [Vercel Dashboard](https://vercel.com/dashboard)
    - Click "Add New..." → "Project"
    - Import your GitHub repository
@@ -93,6 +138,7 @@ Should return:
    - Click "Deploy"
 
 3. **Option B: Using CLI**
+
    ```bash
    cd frontend
    vercel
@@ -105,6 +151,7 @@ Should return:
 ### 3. Update Backend CORS
 
 Go back to Render and update `CORS_ORIGIN`:
+
 ```
 CORS_ORIGIN=https://speakwise.vercel.app
 ```
@@ -116,6 +163,7 @@ Redeploy backend if needed.
 ## Post-Deployment Checklist
 
 ### Backend
+
 - [ ] Health check endpoint working (`/health`)
 - [ ] Database connection successful (`/ready`)
 - [ ] API endpoints responding
@@ -124,6 +172,7 @@ Redeploy backend if needed.
 - [ ] Rate limiting active
 
 ### Frontend
+
 - [ ] Application loads
 - [ ] Login/Register working
 - [ ] Dashboard displays data
@@ -132,6 +181,7 @@ Redeploy backend if needed.
 - [ ] All API calls successful
 
 ### Testing
+
 - [ ] Create test user account
 - [ ] Practice a phrase
 - [ ] Check feedback page
@@ -144,6 +194,7 @@ Redeploy backend if needed.
 ## Environment Variables Reference
 
 ### Backend (.env)
+
 ```bash
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/speakwise?retryWrites=true&w=majority
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-min-32-chars
@@ -153,6 +204,7 @@ CORS_ORIGIN=https://your-frontend-url.vercel.app
 ```
 
 ### Frontend (.env)
+
 ```bash
 VITE_API_URL=https://your-backend-url.onrender.com/api
 ```
@@ -162,14 +214,17 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 ## Monitoring & Maintenance
 
 ### Health Checks
+
 - **Application Health**: `GET /health`
 - **Database Health**: `GET /ready`
 
 ### Logs
+
 - **Render**: Dashboard → Logs tab
 - **Vercel**: Dashboard → Deployments → View Logs
 
 ### Database Backups
+
 - MongoDB Atlas automatically backs up data
 - Configure backup schedule in Atlas dashboard
 
@@ -180,26 +235,31 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 ### Backend Issues
 
 **Problem**: "Cannot connect to database"
+
 - Check MongoDB Atlas IP whitelist
 - Verify connection string
 - Check database user credentials
 
 **Problem**: "CORS error"
+
 - Verify `CORS_ORIGIN` matches frontend URL exactly
 - Check for http vs https mismatch
 
 **Problem**: "Rate limit exceeded"
+
 - Adjust rate limit in `app.js`
 - Current: 100 requests per 15 minutes
 
 ### Frontend Issues
 
 **Problem**: "API calls failing"
+
 - Verify `VITE_API_URL` is correct
 - Check backend is running
 - Check browser console for errors
 
 **Problem**: "Build failing"
+
 - Run `npm run build` locally first
 - Check for TypeScript errors
 - Verify all dependencies installed
@@ -209,6 +269,7 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 ## Security Best Practices
 
 ✅ **Implemented**:
+
 - Helmet.js for security headers
 - Rate limiting (100 req/15min)
 - CORS protection
@@ -217,6 +278,7 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 - Environment variables protected
 
 ⚠️ **Recommended**:
+
 - Enable 2FA on hosting accounts
 - Regular dependency updates (`npm audit`)
 - Monitor error logs
@@ -229,17 +291,20 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 ### When to Upgrade
 
 **Free Tier Limits**:
+
 - Render Free: Sleeps after 15min inactivity
 - MongoDB Atlas Free: 512MB storage
 - Vercel Free: Unlimited bandwidth
 
 **Upgrade When**:
+
 - \u003e 1000 active users
 - \u003e 500MB database size
 - Need 24/7 uptime
 - Need faster response times
 
 ### Upgrade Path
+
 1. Render: $7/month (no sleep)
 2. MongoDB Atlas: $9/month (2GB)
 3. Vercel: Free tier sufficient for most cases
@@ -258,6 +323,7 @@ VITE_API_URL=https://your-backend-url.onrender.com/api
 ## Quick Commands
 
 ### Local Development
+
 ```bash
 # Backend
 cd backend
@@ -271,6 +337,7 @@ npm run dev
 ```
 
 ### Production Build Test
+
 ```bash
 # Frontend
 cd frontend
@@ -279,6 +346,7 @@ npm run preview
 ```
 
 ### Database Seed (Local Only)
+
 ```bash
 cd backend
 node seedPhrases.js
@@ -293,6 +361,7 @@ node seedPhrases.js
 Your SpeakWise application is now live and ready for users!
 
 **Next Steps**:
+
 1. Share the URL with users
 2. Monitor logs for errors
 3. Collect user feedback

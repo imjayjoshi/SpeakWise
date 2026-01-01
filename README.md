@@ -18,7 +18,8 @@ SpeakWise helps language learners practice pronunciation with real-time feedback
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - MongoDB (local or Atlas)
 
 ### Installation
@@ -69,6 +70,7 @@ SpeakWise/
 ## 🛠️ Tech Stack
 
 **Frontend**:
+
 - React 18 + TypeScript
 - Vite (build tool)
 - TailwindCSS + Radix UI
@@ -78,6 +80,7 @@ SpeakWise/
 - XLSX (data export)
 
 **Backend**:
+
 - Node.js + Express 5
 - MongoDB + Mongoose
 - JWT Authentication
@@ -149,6 +152,7 @@ npm run test:security      # Security audits
 ### CI/CD Testing
 
 Automated testing runs on every push/PR via GitHub Actions:
+
 - ✅ Backend unit tests (Node 18.x, 20.x)
 - ✅ Frontend component tests (Node 18.x, 20.x)
 - ✅ E2E tests (multi-browser)
@@ -166,13 +170,13 @@ cd frontend && npm run test:coverage
 npm run test:e2e:report
 ```
 
-
 ## 🚀 Deployment
 
 See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed deployment instructions.
 
 **Recommended Platforms**:
-- Backend: Render / Railway
+
+- Backend: **Koyeb** (no sleep, always-on free tier) ✅
 - Frontend: Vercel
 - Database: MongoDB Atlas
 
@@ -182,4 +186,4 @@ See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for detailed deployment instructions.
 
 ---
 
-**Status**: ✅ Production Ready | **Version**: 1.0.0 | **Last Updated**: November 2025
+**Status**: ✅ Production Ready | **Version**: 1.0.0 | **Last Updated**: January 2026
