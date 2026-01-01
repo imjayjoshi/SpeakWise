@@ -7,19 +7,65 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs
 dist
 dist-ssr
-*.local
+build
+.output
 
+# Local files
+*.local
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Vite cache
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Testing
+coverage/
+.nyc_output/
+.vitest/
+*.snap
+
+# Vercel
+.vercel/
+
+# Security - NEVER commit
+*.pem
+*.key
+.secrets
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+tmp/
+temp/
+
+# ESLint cache
+.eslintcache
